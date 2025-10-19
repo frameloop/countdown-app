@@ -72,11 +72,22 @@ const App = () => {
     }
   };
 
-  // Función para detener música de fondo
+  // Función para detener música de fondo con fade out
   const stopBackgroundMusic = () => {
     if (backgroundMusic) {
-      backgroundMusic.pause();
-      backgroundMusic.currentTime = 0;
+      // Fade out suave durante 2 segundos
+      const fadeOut = () => {
+        const currentVolume = backgroundMusic.volume;
+        if (currentVolume > 0.01) {
+          backgroundMusic.volume = Math.max(0, currentVolume - 0.05);
+          setTimeout(fadeOut, 100);
+        } else {
+          backgroundMusic.pause();
+          backgroundMusic.currentTime = 0;
+          backgroundMusic.volume = 0.3; // Restaurar volumen para próxima vez
+        }
+      };
+      fadeOut();
     }
   };
 
@@ -552,6 +563,7 @@ const App = () => {
             playFinishSound(); // Sonido largo de finalización
             vibrate();
             showNotification();
+            stopBackgroundMusic(); // Fade out de la música de fondo
             
             // Agregar al historial
             const newEntry = {
