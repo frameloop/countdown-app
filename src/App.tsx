@@ -111,9 +111,10 @@ const App = () => {
     <div className={`min-h-screen ${currentTheme.bg} ${currentTheme.text} p-4 flex flex-col items-center justify-center`}>
       <div className="max-w-md mx-auto">
                {/* Título */}
-               <h1 className="text-3xl font-bold text-center mb-8">
-                 CounterDown
-               </h1>
+        <h1 className="text-3xl font-bold text-center mb-8">
+          CounterDown
+        </h1>
+        {/* Force deployment update */}
 
 
         {/* Display odómetro */}
