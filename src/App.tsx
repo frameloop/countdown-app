@@ -63,7 +63,7 @@ const App = () => {
     
     try {
       const audio = new Audio('/background-music.mp3');
-      audio.volume = isMusicMuted ? 0 : 0.15;
+      audio.volume = isMusicMuted ? 0 : 0.05; // Volumen muy bajo para no interferir con pitidos
       audio.loop = true;
       await audio.play();
       setBackgroundMusic(audio);
@@ -85,18 +85,26 @@ const App = () => {
         } else {
           backgroundMusic.pause();
           backgroundMusic.currentTime = 0;
-          backgroundMusic.volume = 0.15; // Restaurar volumen para próxima vez
+          backgroundMusic.volume = 0.05; // Restaurar volumen muy bajo para próxima vez
         }
       };
       fadeOut();
     }
   };
 
-  // Función para toggle mute
+  // Función para toggle mute (solo música de fondo, no pitidos)
   const toggleMusicMute = () => {
     setIsMusicMuted(!isMusicMuted);
     if (backgroundMusic) {
-      backgroundMusic.volume = !isMusicMuted ? 0 : 0.15;
+      if (isMusicMuted) {
+        // Si estaba silenciado, reanudar música
+        backgroundMusic.volume = 0.05; // Volumen muy bajo para no interferir con pitidos
+        backgroundMusic.play().catch(() => {});
+      } else {
+        // Si estaba sonando, silenciar música
+        backgroundMusic.volume = 0;
+        backgroundMusic.pause();
+      }
     }
   };
   const [history, setHistory] = useState<Array<{
