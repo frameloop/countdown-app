@@ -34,14 +34,15 @@ input {
 }
 
 button {
-  padding: 0.75rem 1.5rem;
-  font-size: 1rem;
+  padding: 1rem 2rem;
+  font-size: 1.2rem;
   margin: 0.5rem;
   background: #1e1e1e;
   color: white;
   border: 2px solid #444;
   border-radius: 8px;
   cursor: pointer;
+  min-width: 120px; /* Ancho mínimo para consistencia */
 }
 
 button:hover {
@@ -57,18 +58,22 @@ button:disabled {
   display: flex;
   flex-direction: row;
   flex-wrap: wrap;
-  gap: 1rem;
+  gap: 1.5rem;
   justify-content: center;
-  margin-top: 2rem;
+  margin-top: 0; /* Sin margen superior */
+  padding: 1rem;
+  /* Posicionamiento fijo en la parte inferior */
+  align-self: flex-end;
 }
 
 .screen {
   display: none;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
+  justify-content: space-between; /* Distribuye el espacio entre el contador y los botones */
   height: 100%;
   width: 100%;
+  padding: 2rem 1rem; /* Padding para evitar que toque los bordes */
 }
 
 .screen.active {
@@ -77,22 +82,69 @@ button:disabled {
 
 .odometer {
   display: flex;
-  gap: 0.1em;
-  font-size: clamp(4rem, 10vw, 12rem);
-  font-weight: bold;
+  gap: 0.2em;
+  font-size: clamp(8rem, 25vw, 20rem); /* Mucho más grande */
+  font-weight: 900; /* Más grueso como en la imagen */
   line-height: 1;
   justify-content: center;
   align-items: center;
+  flex: 1; /* Ocupa todo el espacio disponible */
 }
 
 .digit {
   position: relative;
-  width: 0.8em;
-  height: 1.2em;
+  width: 0.9em;
+  height: 1.4em;
   overflow: hidden;
   display: flex;
   align-items: center;
   justify-content: center;
+  background: #000; /* Panel negro mate */
+  border: 4px solid #555; /* Borde metálico más visible */
+  border-radius: 6px; /* Esquinas menos redondeadas */
+  box-shadow: 
+    inset 0 3px 6px rgba(0,0,0,0.8), /* Sombra interna profunda */
+    inset 0 -1px 2px rgba(255,255,255,0.1), /* Resaltado interno sutil */
+    0 6px 12px rgba(0,0,0,0.5); /* Sombra externa más pronunciada */
+  /* Efecto de barra horizontal central más visible */
+  background-image: 
+    linear-gradient(
+      to bottom,
+      transparent 0%,
+      transparent 47%,
+      #666 48%,
+      #777 49%,
+      #777 51%,
+      #666 52%,
+      transparent 53%,
+      transparent 100%
+    );
+}
+
+/* Efecto de pivotes laterales más visibles */
+.digit::before,
+.digit::after {
+  content: '';
+  position: absolute;
+  width: 8px;
+  height: 8px;
+  background: #777;
+  border-radius: 50%;
+  top: 50%;
+  transform: translateY(-50%);
+  box-shadow: 
+    inset 0 2px 4px rgba(0,0,0,0.8),
+    inset 0 -1px 2px rgba(255,255,255,0.2),
+    0 2px 4px rgba(0,0,0,0.3);
+  border: 1px solid #555;
+}
+
+.digit::before {
+  left: -4px;
+}
+
+.digit::after {
+  right: -4px;
 }
 
 .digit-inner {
@@ -100,16 +152,62 @@ button:disabled {
   top: 0;
   left: 0;
   width: 100%;
-  transition: transform 0.3s ease-in-out;
+  transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1); /* Animación más suave */
   display: flex;
   flex-direction: column;
+  z-index: 2; /* Por encima de la barra horizontal */
 }
 
 .digit-inner div {
-  height: 1.2em;
+  height: 1.4em;
   text-align: center;
   display: flex;
   align-items: center;
   justify-content: center;
   width: 100%;
+  color: #fff;
+  text-shadow: 
+    0 2px 4px rgba(0,0,0,1), /* Sombra del texto más pronunciada */
+    0 0 8px rgba(255,255,255,0.5), /* Brillo más visible */
+    0 0 12px rgba(255,255,255,0.2); /* Halos adicionales */
+  font-family: 'Inter', sans-serif;
+  font-weight: 900;
+  letter-spacing: -0.02em; /* Ajuste fino de espaciado */
+  position: relative;
+  overflow: hidden;
+}
+
+/* Línea divisoria sobre el número */
+.digit-inner div::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: -5px;
+  right: -5px;
+  height: 2px;
+  background: #666;
+  transform: translateY(-50%);
+  z-index: 4;
+  box-shadow: 
+    inset 0 1px 2px rgba(255,255,255,0.1),
+    0 1px 2px rgba(0,0,0,0.3);
+}
+
+/* Efecto especial para los dos puntos */
+.odometer .digit:has(> .colon) {
+  background: none;
+  border: none;
+  box-shadow: none;
+  width: 0.3em;
+}
+
+.odometer .digit:has(> .colon)::before,
+.odometer .digit:has(> .colon)::after {
+  display: none;
+}
+
+.colon {
+  font-size: 0.8em;
+  color: #fff;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.8);
 }

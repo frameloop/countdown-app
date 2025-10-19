@@ -24,7 +24,8 @@ function renderDigits(value) {
     digit.className = 'digit';
 
     if (char === ':') {
-      digit.textContent = ':';
+      // Para los dos puntos, crear un elemento simple
+      digit.innerHTML = '<span class="colon">:</span>';
     } else {
       const inner = document.createElement('div');
       inner.className = 'digit-inner';
@@ -32,10 +33,12 @@ function renderDigits(value) {
       for (let i = 0; i <= 9; i++) {
         const d = document.createElement('div');
         d.textContent = i;
+        d.setAttribute('data-digit', i);
         inner.appendChild(d);
       }
 
-      inner.style.transform = `translateY(-${parseInt(char) * 1.2}em)`;
+      // Ajustar la transformación para el nuevo tamaño
+      inner.style.transform = `translateY(-${parseInt(char) * 1.4}em)`;
       digit.appendChild(inner);
     }
 
