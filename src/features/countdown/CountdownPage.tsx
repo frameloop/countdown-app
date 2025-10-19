@@ -219,13 +219,24 @@ const CountdownPage: React.FC<CountdownPageProps> = ({
       </div>
 
       {/* BOTÓN DE PRUEBA SÚPER VISIBLE */}
-      <div className="p-4 bg-yellow-500/20 border-b border-yellow-500/30">
+      <div className="p-6 bg-yellow-500 border-b-4 border-yellow-600 shadow-2xl">
+        <div className="text-center mb-2">
+          <span className="text-yellow-900 font-bold text-sm">🔧 BOTÓN DE PRUEBA 🔧</span>
+        </div>
         <button
           onClick={startBackgroundMusic}
-          className="w-full py-4 px-6 bg-green-500 hover:bg-green-600 text-white font-bold text-lg rounded-xl shadow-lg border-4 border-green-400 animate-pulse"
+          className="w-full py-6 px-8 bg-green-500 hover:bg-green-600 text-white font-black text-2xl rounded-2xl shadow-2xl border-8 border-green-300 animate-bounce"
+          style={{
+            background: 'linear-gradient(45deg, #10B981, #059669)',
+            boxShadow: '0 0 30px rgba(16, 185, 129, 0.8), inset 0 2px 4px rgba(255,255,255,0.3)',
+            textShadow: '2px 2px 4px rgba(0,0,0,0.5)'
+          }}
         >
           🎵 PROBAR MÚSICA DE FONDO 🎵
         </button>
+        <div className="text-center mt-2">
+          <span className="text-yellow-800 font-bold text-xs">¡Haz clic aquí para probar!</span>
+        </div>
       </div>
 
       {/* Contenido principal */}
