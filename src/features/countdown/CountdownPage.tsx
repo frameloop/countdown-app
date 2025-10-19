@@ -58,6 +58,26 @@ const CountdownPage: React.FC<CountdownPageProps> = ({
     };
   }, [settings.soundsEnabled, initializeAudio]);
 
+  // Sistema de reactivación de audio en tiempo real
+  useEffect(() => {
+    if (!isRunning || !settings.soundsEnabled) return;
+
+    const handleTouch = async () => {
+      await initializeAudio();
+    };
+
+    // Agregar listeners continuos para mantener audio activo
+    document.addEventListener('touchstart', handleTouch);
+    document.addEventListener('touchmove', handleTouch);
+    document.addEventListener('touchend', handleTouch);
+
+    return () => {
+      document.removeEventListener('touchstart', handleTouch);
+      document.removeEventListener('touchmove', handleTouch);
+      document.removeEventListener('touchend', handleTouch);
+    };
+  }, [isRunning, settings.soundsEnabled, initializeAudio]);
+
   // Función para activar audio manualmente
   const handleActivateAudio = useCallback(async () => {
     if (settings.soundsEnabled) {
@@ -86,11 +106,13 @@ const CountdownPage: React.FC<CountdownPageProps> = ({
           }
           
           // Reproducir tick cada segundo (excepto en el último segundo)
-          if (prev > 1 && settings.soundsEnabled) {
-            playTickSound();
-          } else if (prev > 1) {
-            // Reproducir sonido silencioso para mantener contexto activo
-            playSilentSound();
+          if (prev > 1) {
+            if (settings.soundsEnabled) {
+              playTickSound();
+            } else {
+              // Reproducir sonido silencioso para mantener contexto activo
+              playSilentSound();
+            }
           }
           
           return prev - 1;
@@ -283,6 +305,16 @@ const CountdownPage: React.FC<CountdownPageProps> = ({
               className="px-6 py-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium transition-all duration-200"
             >
               🔊 Activar Sonidos
+            </button>
+          )}
+
+          {/* Botón de reactivación de audio durante countdown */}
+          {settings.soundsEnabled && isRunning && (
+            <button
+              onClick={handleActivateAudio}
+              className="px-4 py-2 rounded-lg bg-orange-600 hover:bg-orange-700 text-white text-xs font-medium transition-all duration-200"
+            >
+              🔄 Reactivar Audio
             </button>
           )}
         </div>

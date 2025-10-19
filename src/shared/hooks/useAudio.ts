@@ -68,15 +68,33 @@ export const useAudio = () => {
     if (!isMobile()) return;
     
     const keepAliveInterval = setInterval(async () => {
-      if (audioState.current.context && audioState.current.context.state === 'suspended') {
+      if (audioState.current.context) {
         try {
-          await audioState.current.context.resume();
-          console.log('AudioContext mantenido activo');
+          // Siempre intentar resumir, no solo si está suspendido
+          if (audioState.current.context.state !== 'running') {
+            await audioState.current.context.resume();
+            console.log('AudioContext mantenido activo - estado:', audioState.current.context.state);
+          }
+          
+          // Reproducir sonido silencioso para mantener activo
+          const oscillator = audioState.current.context.createOscillator();
+          const gainNode = audioState.current.context.createGain();
+          
+          oscillator.connect(gainNode);
+          gainNode.connect(audioState.current.context.destination);
+          
+          oscillator.frequency.setValueAtTime(1000, audioState.current.context.currentTime);
+          gainNode.gain.setValueAtTime(0.0001, audioState.current.context.currentTime);
+          gainNode.gain.exponentialRampToValueAtTime(0.00001, audioState.current.context.currentTime + 0.01);
+          
+          oscillator.start(audioState.current.context.currentTime);
+          oscillator.stop(audioState.current.context.currentTime + 0.01);
+          
         } catch (error) {
           console.warn('Error manteniendo AudioContext activo:', error);
         }
       }
-    }, 2000); // Cada 2 segundos
+    }, 1000); // Cada 1 segundo para ser más agresivo
 
     return keepAliveInterval;
   }, [isMobile]);
