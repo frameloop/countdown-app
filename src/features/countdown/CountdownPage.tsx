@@ -13,7 +13,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import type { AppSettings } from '../../types';
 import { formatTime } from '../../shared/utils/time';
-import { useHybridAudio } from '../../shared/hooks/useHybridAudio';
+import { useAudioPool } from '../../shared/hooks/useAudioPool';
 
 interface CountdownPageProps {
   totalSeconds: number;
@@ -34,8 +34,8 @@ const CountdownPage: React.FC<CountdownPageProps> = ({
   const [isFinished, setIsFinished] = useState(false);
   const [audioInitialized, setAudioInitialized] = useState(false);
 
-  // Hook personalizado para manejo de audio híbrido
-  const { playTickSound, playFinishSound, initializeAudio, reactivateAudio, audioLost } = useHybridAudio();
+  // Hook personalizado para manejo de audio con pool
+  const { playTickSound, playFinishSound, initializeAudio, reactivateAudio, audioLost } = useAudioPool();
 
   // Inicializar audio cuando el usuario interactúe
   useEffect(() => {
@@ -81,6 +81,26 @@ const CountdownPage: React.FC<CountdownPageProps> = ({
       document.removeEventListener('click', handleTouch);
     };
   }, [isRunning, settings.soundsEnabled, audioLost, reactivateAudio]);
+
+  // Precarga agresiva de audio
+  useEffect(() => {
+    if (settings.soundsEnabled && !audioInitialized) {
+      const precacheAudio = async () => {
+        await initializeAudio();
+        setAudioInitialized(true);
+        
+        // Precargar reproduciendo sonidos silenciosos
+        try {
+          await playTickSound();
+          await playTickSound();
+        } catch (error) {
+          console.warn('Error en precarga de audio:', error);
+        }
+      };
+      
+      precacheAudio();
+    }
+  }, [settings.soundsEnabled, audioInitialized, initializeAudio, playTickSound]);
 
   // Función para activar audio manualmente
   const handleActivateAudio = useCallback(async () => {
@@ -300,18 +320,26 @@ const CountdownPage: React.FC<CountdownPageProps> = ({
             </button>
           )}
 
-          {/* Indicador de pérdida de audio */}
-          {settings.soundsEnabled && audioLost && (
+          {/* Indicador de estado del audio */}
+          {settings.soundsEnabled && (
             <div className="flex flex-col items-center gap-2">
-              <div className="px-4 py-2 rounded-lg bg-red-600/20 border border-red-500/30 text-red-400 text-sm">
-                ⚠️ Audio perdido - Toca para reactivar
-              </div>
-              <button
-                onClick={reactivateAudio}
-                className="px-4 py-2 rounded-lg bg-red-600 hover:bg-red-700 text-white text-sm font-medium transition-all duration-200"
-              >
-                🔄 Reactivar Audio
-              </button>
+              {audioLost ? (
+                <>
+                  <div className="px-4 py-2 rounded-lg bg-red-600/20 border border-red-500/30 text-red-400 text-sm">
+                    ⚠️ Audio perdido - Toca para reactivar
+                  </div>
+                  <button
+                    onClick={reactivateAudio}
+                    className="px-4 py-2 rounded-lg bg-red-600 hover:bg-red-700 text-white text-sm font-medium transition-all duration-200"
+                  >
+                    🔄 Reactivar Audio
+                  </button>
+                </>
+              ) : (
+                <div className="px-4 py-2 rounded-lg bg-green-600/20 border border-green-500/30 text-green-400 text-sm">
+                  🔊 Audio activo
+                </div>
+              )}
             </div>
           )}
         </div>
