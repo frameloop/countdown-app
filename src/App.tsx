@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Settings, Volume2, VolumeX, Play, Pause, RotateCcw, ArrowLeft, Bell, Vibrate, Music } from 'lucide-react';
+import { Settings, Volume2, VolumeX, Play, Pause, RotateCcw, ArrowLeft, Bell, Vibrate } from 'lucide-react';
 
 // Componente principal de la aplicación
 const App = () => {
