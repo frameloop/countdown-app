@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { Settings, Volume2, VolumeX, Play, Pause, RotateCcw, ArrowLeft, Bell, Vibrate, Music } from 'lucide-react';
 
 // Componente principal de la aplicación
 const App = () => {
@@ -216,7 +217,8 @@ const App = () => {
                  onClick={() => setCurrentPage('landing')}
                  className="flex items-center gap-2 text-white/60 hover:text-white transition-colors"
                >
-                 <span className="font-bold">←</span> Volver
+                 <ArrowLeft size={20} />
+                 <span>Volver</span>
                </button>
                
                <div className="flex items-center gap-4">
@@ -226,14 +228,14 @@ const App = () => {
                      isMusicMuted ? 'text-red-400 hover:text-red-300' : 'text-white/60 hover:text-white'
                    }`}
                  >
-                   {isMusicMuted ? '🔇' : '🔊'}
+                   {isMusicMuted ? <VolumeX size={20} /> : <Volume2 size={20} />}
                  </button>
                  
                  <button
                    onClick={() => setCurrentPage('settings')}
                    className="flex items-center gap-2 text-white/60 hover:text-white transition-colors"
                  >
-                   ⚙️
+                   <Settings size={20} />
                  </button>
                </div>
              </div>
@@ -259,20 +261,22 @@ const App = () => {
                <div className="flex gap-4 justify-center mb-8">
                  <button
                    onClick={toggleTimer}
-                   className={`px-8 py-4 rounded-2xl font-semibold text-lg transition-all duration-200 ${
+                   className={`px-8 py-4 rounded-2xl font-semibold text-lg transition-all duration-200 flex items-center gap-2 ${
                      isRunning 
                        ? 'bg-red-600 hover:bg-red-700 text-white' 
                        : 'bg-white text-black hover:bg-white/90'
                    }`}
                  >
-                   {isRunning ? 'Pausar' : 'Iniciar'}
+                   {isRunning ? <Pause size={20} /> : <Play size={20} />}
+                   <span>{isRunning ? 'Pausar' : 'Iniciar'}</span>
                  </button>
 
                  <button
                    onClick={resetTimer}
-                   className="px-6 py-4 rounded-2xl border border-white/20 text-white hover:border-white/40 hover:bg-white/10 transition-all duration-200"
+                   className="px-6 py-4 rounded-2xl border border-white/20 text-white hover:border-white/40 hover:bg-white/10 transition-all duration-200 flex items-center gap-2"
                  >
-                   Reset
+                   <RotateCcw size={18} />
+                   <span>Reset</span>
                  </button>
                </div>
 
@@ -305,7 +309,7 @@ const App = () => {
           {/* Toggle de sonidos */}
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <span className="text-2xl">🔊</span>
+              <Volume2 size={24} className="text-white/80" />
               <div>
                 <div className="font-medium">Sonidos</div>
                 <div className="text-sm text-white/60">Pitido al finalizar</div>
@@ -328,7 +332,7 @@ const App = () => {
           {/* Toggle de vibración */}
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <span className="text-2xl">📳</span>
+              <Vibrate size={24} className="text-white/80" />
               <div>
                 <div className="font-medium">Vibración</div>
                 <div className="text-sm text-white/60">Pulso al finalizar</div>
@@ -351,7 +355,7 @@ const App = () => {
           {/* Toggle de notificaciones */}
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <span className="text-2xl">🔔</span>
+              <Bell size={24} className="text-white/80" />
               <div>
                 <div className="font-medium">Notificaciones</div>
                 <div className="text-sm text-white/60">Aviso al finalizar</div>
