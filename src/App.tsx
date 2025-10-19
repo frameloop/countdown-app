@@ -61,7 +61,7 @@ const App = () => {
       <div className="max-w-md mx-auto">
                {/* Título */}
                <h1 className="text-3xl font-bold text-center mb-8">
-                 CounterDown
+                 Counter Down
                </h1>
 
         {/* Display odómetro */}
