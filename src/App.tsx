@@ -64,6 +64,30 @@ const App = () => {
                  CounterDown
                </h1>
 
+        {/* BOTÓN DE PRUEBA SÚPER VISIBLE EN LANDING */}
+        <div className="mb-8 p-6 bg-yellow-500 border-4 border-yellow-600 shadow-2xl rounded-2xl">
+          <div className="text-center mb-2">
+            <span className="text-yellow-900 font-bold text-sm">🔧 BOTÓN DE PRUEBA 🔧</span>
+          </div>
+          <button
+            onClick={() => {
+              console.log('🎵 BOTÓN DE PRUEBA CLICKEADO 🎵');
+              alert('¡Botón de prueba funcionando!');
+            }}
+            className="w-full py-6 px-8 bg-green-500 hover:bg-green-600 text-white font-black text-2xl rounded-2xl shadow-2xl border-8 border-green-300 animate-bounce"
+            style={{
+              background: 'linear-gradient(45deg, #10B981, #059669)',
+              boxShadow: '0 0 30px rgba(16, 185, 129, 0.8), inset 0 2px 4px rgba(255,255,255,0.3)',
+              textShadow: '2px 2px 4px rgba(0,0,0,0.5)'
+            }}
+          >
+            🎵 BOTÓN DE PRUEBA 🎵
+          </button>
+          <div className="text-center mt-2">
+            <span className="text-yellow-800 font-bold text-xs">¡Haz clic aquí para probar!</span>
+          </div>
+        </div>
+
         {/* Display odómetro */}
         <div className="mb-8">
           <div className={`relative rounded-3xl ${currentTheme.card} border ${currentTheme.border} shadow-[inset_0_2px_12px_rgba(0,0,0,.8)] p-8`}>
