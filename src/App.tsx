@@ -70,9 +70,22 @@ const App = () => {
             <span className="text-yellow-900 font-bold text-sm">🔧 BOTÓN DE PRUEBA 🔧</span>
           </div>
           <button
-            onClick={() => {
+            onClick={async () => {
               console.log('🎵 BOTÓN DE PRUEBA CLICKEADO 🎵');
-              alert('¡Botón de prueba funcionando!');
+              try {
+                // Crear un audio simple para probar
+                const audio = new Audio('/background-music.mp3');
+                audio.volume = 0.5;
+                audio.loop = true;
+                
+                console.log('🎵 Intentando reproducir música...');
+                await audio.play();
+                console.log('🎵 Música iniciada exitosamente');
+                alert('¡Música iniciada! Revisa la consola para logs.');
+              } catch (error) {
+                console.error('🎵 Error reproduciendo música:', error);
+                alert('Error: ' + error.message);
+              }
             }}
             className="w-full py-6 px-8 bg-green-500 hover:bg-green-600 text-white font-black text-2xl rounded-2xl shadow-2xl border-8 border-green-300 animate-bounce"
             style={{
