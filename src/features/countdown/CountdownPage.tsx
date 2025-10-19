@@ -347,8 +347,15 @@ const CountdownPage: React.FC<CountdownPageProps> = ({
                   </button>
                 </>
               ) : (
-                <div className="px-4 py-2 rounded-lg bg-green-600/20 border border-green-500/30 text-green-400 text-sm">
-                  🔊 Audio activo
+                <div className="flex flex-col items-center gap-1">
+                  <div className="px-4 py-2 rounded-lg bg-green-600/20 border border-green-500/30 text-green-400 text-sm">
+                    🔊 Audio activo
+                  </div>
+                  {isRunning && (
+                    <div className="px-3 py-1 rounded-lg bg-blue-600/20 border border-blue-500/30 text-blue-400 text-xs">
+                      🎵 Música de fondo
+                    </div>
+                  )}
                 </div>
               )}
             </div>

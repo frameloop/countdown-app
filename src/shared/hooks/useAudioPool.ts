@@ -66,14 +66,14 @@ export const useAudioPool = () => {
     // Crear una melodía suave y repetitiva
     for (let i = 0; i < length; i++) {
       const t = i / sampleRate;
-      // Frecuencia base muy baja con modulación suave
-      const baseFreq = 200;
-      const modulation = Math.sin(2 * Math.PI * 0.5 * t) * 50; // Modulación lenta
+      // Frecuencia base más alta y audible
+      const baseFreq = 400;
+      const modulation = Math.sin(2 * Math.PI * 0.5 * t) * 100; // Modulación más amplia
       const frequency = baseFreq + modulation;
       
       // Crear una onda suave con envelope
       const envelope = Math.sin(2 * Math.PI * t) * 0.5 + 0.5; // Envelope suave
-      const sample = Math.sin(2 * Math.PI * frequency * t) * envelope * 0.05 * 32767;
+      const sample = Math.sin(2 * Math.PI * frequency * t) * envelope * 0.2 * 32767; // Más volumen
       
       view.setInt16(44 + i * 2, Math.max(-32767, Math.min(32767, sample)), true);
     }
@@ -166,7 +166,7 @@ export const useAudioPool = () => {
       // Crear música de fondo
       const backgroundMusic = new Audio(backgroundUrl);
       backgroundMusic.loop = true;
-      backgroundMusic.volume = isMobile() ? 0.1 : 0.05; // Muy suave
+      backgroundMusic.volume = isMobile() ? 0.3 : 0.2; // Más audible
       backgroundMusic.preload = 'auto';
       backgroundMusic.load();
 
@@ -306,12 +306,15 @@ export const useAudioPool = () => {
   const startBackgroundMusic = useCallback(async () => {
     if (audioState.current.backgroundMusic && !audioState.current.backgroundMusicPlaying) {
       try {
+        console.log('Intentando iniciar música de fondo...');
         await audioState.current.backgroundMusic.play();
         audioState.current.backgroundMusicPlaying = true;
-        console.log('Música de fondo iniciada');
+        console.log('Música de fondo iniciada exitosamente');
       } catch (error) {
         console.warn('Error iniciando música de fondo:', error);
       }
+    } else {
+      console.log('Música de fondo no disponible o ya reproduciéndose');
     }
   }, []);
 
