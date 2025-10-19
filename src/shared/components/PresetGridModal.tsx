@@ -174,12 +174,12 @@ export const PresetGridModal: FC<PresetGridModalProps> = ({
 
                       {/* Label */}
                       <div className="text-sm font-medium text-white text-center mb-1">
-                        {String(preset.label)}
+                        {preset.label as string}
                       </div>
 
                       {/* Tiempo */}
                       <div className="text-xs text-white/60 font-mono">
-                        {String(formatTime(preset.seconds))}
+                        {formatTime(preset.seconds) as string}
                       </div>
 
                       {/* Indicador de preset personalizado */}
