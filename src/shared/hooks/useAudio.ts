@@ -4,13 +4,15 @@ interface AudioContextState {
   context: AudioContext | null;
   isInitialized: boolean;
   isSuspended: boolean;
+  keepAliveInterval: NodeJS.Timeout | null;
 }
 
 export const useAudio = () => {
   const audioState = useRef<AudioContextState>({
     context: null,
     isInitialized: false,
-    isSuspended: false
+    isSuspended: false,
+    keepAliveInterval: null
   });
 
   // Detectar si es un dispositivo móvil
@@ -38,7 +40,8 @@ export const useAudio = () => {
       audioState.current = {
         context,
         isInitialized: true,
-        isSuspended: false
+        isSuspended: false,
+        keepAliveInterval: null
       };
       
       return context;
@@ -65,39 +68,38 @@ export const useAudio = () => {
 
   // Función para mantener el contexto activo periódicamente
   const startKeepAlive = useCallback(() => {
-    if (!isMobile()) return;
+    if (!isMobile()) return null;
+    
+    // Limpiar intervalo anterior si existe
+    if (audioState.current.keepAliveInterval) {
+      clearInterval(audioState.current.keepAliveInterval);
+    }
     
     const keepAliveInterval = setInterval(async () => {
       if (audioState.current.context) {
         try {
-          // Siempre intentar resumir, no solo si está suspendido
+          // Forzar resume del contexto
           if (audioState.current.context.state !== 'running') {
             await audioState.current.context.resume();
-            console.log('AudioContext mantenido activo - estado:', audioState.current.context.state);
+            console.log('AudioContext resumido - estado:', audioState.current.context.state);
           }
-          
-          // Reproducir sonido silencioso para mantener activo
-          const oscillator = audioState.current.context.createOscillator();
-          const gainNode = audioState.current.context.createGain();
-          
-          oscillator.connect(gainNode);
-          gainNode.connect(audioState.current.context.destination);
-          
-          oscillator.frequency.setValueAtTime(1000, audioState.current.context.currentTime);
-          gainNode.gain.setValueAtTime(0.0001, audioState.current.context.currentTime);
-          gainNode.gain.exponentialRampToValueAtTime(0.00001, audioState.current.context.currentTime + 0.01);
-          
-          oscillator.start(audioState.current.context.currentTime);
-          oscillator.stop(audioState.current.context.currentTime + 0.01);
-          
         } catch (error) {
-          console.warn('Error manteniendo AudioContext activo:', error);
+          console.warn('Error resumiendo AudioContext:', error);
         }
       }
-    }, 1000); // Cada 1 segundo para ser más agresivo
+    }, 500); // Cada 500ms para ser muy agresivo
 
+    audioState.current.keepAliveInterval = keepAliveInterval;
     return keepAliveInterval;
   }, [isMobile]);
+
+  // Detener keep-alive
+  const stopKeepAlive = useCallback(() => {
+    if (audioState.current.keepAliveInterval) {
+      clearInterval(audioState.current.keepAliveInterval);
+      audioState.current.keepAliveInterval = null;
+    }
+  }, []);
 
   // Reproducir sonido silencioso para mantener contexto activo
   const playSilentSound = useCallback(async () => {
@@ -181,15 +183,17 @@ export const useAudio = () => {
 
   // Limpiar recursos
   const cleanup = useCallback(() => {
+    stopKeepAlive();
     if (audioState.current.context) {
       audioState.current.context.close();
       audioState.current = {
         context: null,
         isInitialized: false,
-        isSuspended: false
+        isSuspended: false,
+        keepAliveInterval: null
       };
     }
-  }, []);
+  }, [stopKeepAlive]);
 
   // Limpiar al desmontar
   useEffect(() => {
@@ -202,6 +206,7 @@ export const useAudio = () => {
     initializeAudio,
     keepContextAlive,
     startKeepAlive,
+    stopKeepAlive,
     playSilentSound,
     cleanup
   };

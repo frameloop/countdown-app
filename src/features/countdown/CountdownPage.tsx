@@ -35,7 +35,7 @@ const CountdownPage: React.FC<CountdownPageProps> = ({
   const [audioInitialized, setAudioInitialized] = useState(false);
 
   // Hook personalizado para manejo de audio
-  const { playTickSound, playFinishSound, initializeAudio, startKeepAlive, playSilentSound } = useAudio();
+  const { playTickSound, playFinishSound, initializeAudio, startKeepAlive, stopKeepAlive, playSilentSound } = useAudio();
 
   // Inicializar audio cuando el usuario interactúe
   useEffect(() => {
@@ -122,9 +122,16 @@ const CountdownPage: React.FC<CountdownPageProps> = ({
 
     return () => {
       if (interval) clearInterval(interval);
-      if (keepAliveInterval) clearInterval(keepAliveInterval);
+      stopKeepAlive();
     };
-  }, [isRunning, timeLeft, playTickSound, settings.soundsEnabled, startKeepAlive]);
+  }, [isRunning, timeLeft, playTickSound, settings.soundsEnabled, startKeepAlive, stopKeepAlive]);
+
+  // Detener keep-alive cuando se pausa
+  useEffect(() => {
+    if (!isRunning) {
+      stopKeepAlive();
+    }
+  }, [isRunning, stopKeepAlive]);
 
   // Efecto para cuando termina el temporizador
   useEffect(() => {
