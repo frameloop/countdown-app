@@ -218,6 +218,16 @@ const CountdownPage: React.FC<CountdownPageProps> = ({
         </div>
       </div>
 
+      {/* BOTÓN DE PRUEBA SÚPER VISIBLE */}
+      <div className="p-4 bg-yellow-500/20 border-b border-yellow-500/30">
+        <button
+          onClick={startBackgroundMusic}
+          className="w-full py-4 px-6 bg-green-500 hover:bg-green-600 text-white font-bold text-lg rounded-xl shadow-lg border-4 border-green-400 animate-pulse"
+        >
+          🎵 PROBAR MÚSICA DE FONDO 🎵
+        </button>
+      </div>
+
       {/* Contenido principal */}
       <div className="flex-1 flex flex-col items-center justify-center px-4">
         {/* Display odómetro principal */}

@@ -118,8 +118,18 @@ export const useAudioPool = () => {
       // Crear música de fondo usando archivo real
       const backgroundMusic = new Audio('/background-music.mp3');
       backgroundMusic.loop = true;
-      backgroundMusic.volume = isMobile() ? 0.3 : 0.2; // Más audible
+      backgroundMusic.volume = isMobile() ? 0.5 : 0.4; // Volumen más alto para testing
       backgroundMusic.preload = 'auto';
+      
+      // Agregar listeners para debugging
+      backgroundMusic.addEventListener('loadstart', () => console.log('Música: Iniciando carga'));
+      backgroundMusic.addEventListener('loadeddata', () => console.log('Música: Datos cargados'));
+      backgroundMusic.addEventListener('canplay', () => console.log('Música: Puede reproducir'));
+      backgroundMusic.addEventListener('canplaythrough', () => console.log('Música: Carga completa'));
+      backgroundMusic.addEventListener('error', (e) => console.error('Música: Error de carga', e));
+      backgroundMusic.addEventListener('play', () => console.log('Música: Reproduciendo'));
+      backgroundMusic.addEventListener('pause', () => console.log('Música: Pausada'));
+      
       backgroundMusic.load();
 
       audioState.current = {
@@ -256,38 +266,37 @@ export const useAudioPool = () => {
 
   // Iniciar música de fondo
   const startBackgroundMusic = useCallback(async () => {
-    if (audioState.current.backgroundMusic && !audioState.current.backgroundMusicPlaying) {
-      try {
-        console.log('Intentando iniciar música de fondo...');
-        
-        // Verificar si el archivo está cargado
-        if (audioState.current.backgroundMusic.readyState < 2) {
-          console.log('Esperando a que se cargue el archivo de música...');
-          await new Promise((resolve, reject) => {
-            const timeout = setTimeout(() => reject(new Error('Timeout cargando música')), 5000);
-            audioState.current.backgroundMusic!.addEventListener('canplay', () => {
-              clearTimeout(timeout);
-              resolve(void 0);
-            });
-            audioState.current.backgroundMusic!.addEventListener('error', (e) => {
-              clearTimeout(timeout);
-              reject(e);
-            });
-          });
-        }
-        
-        await audioState.current.backgroundMusic.play();
+    if (!audioState.current.backgroundMusic) {
+      console.log('Música de fondo no disponible');
+      return;
+    }
+
+    if (audioState.current.backgroundMusicPlaying) {
+      console.log('Música de fondo ya reproduciéndose');
+      return;
+    }
+
+    try {
+      console.log('Intentando iniciar música de fondo...');
+      console.log('Estado del audio:', audioState.current.backgroundMusic.readyState);
+      console.log('Volumen:', audioState.current.backgroundMusic.volume);
+      console.log('Loop:', audioState.current.backgroundMusic.loop);
+      
+      // Forzar play sin esperar
+      const playPromise = audioState.current.backgroundMusic.play();
+      
+      if (playPromise !== undefined) {
+        await playPromise;
         audioState.current.backgroundMusicPlaying = true;
         console.log('Música de fondo iniciada exitosamente');
-      } catch (error) {
-        console.warn('Error iniciando música de fondo:', error);
-        // Intentar recargar el archivo
-        if (audioState.current.backgroundMusic) {
-          audioState.current.backgroundMusic.load();
-        }
       }
-    } else {
-      console.log('Música de fondo no disponible o ya reproduciéndose');
+    } catch (error) {
+      console.error('Error iniciando música de fondo:', error);
+      console.log('Detalles del error:', {
+        name: error.name,
+        message: error.message,
+        code: (error as any).code
+      });
     }
   }, []);
 
