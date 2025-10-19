@@ -34,52 +34,6 @@ export const useAudioPool = () => {
            (navigator.maxTouchPoints > 0);
   }, []);
 
-  // Crear música de fondo suave y continua
-  const createBackgroundMusicData = useCallback(() => {
-    const sampleRate = 44100;
-    const duration = 1.0; // 1 segundo de loop
-    const length = sampleRate * duration;
-    const buffer = new ArrayBuffer(44 + length * 2);
-    const view = new DataView(buffer);
-    
-    // WAV header
-    const writeString = (offset: number, string: string) => {
-      for (let i = 0; i < string.length; i++) {
-        view.setUint8(offset + i, string.charCodeAt(i));
-      }
-    };
-    
-    writeString(0, 'RIFF');
-    view.setUint32(4, 36 + length * 2, true);
-    writeString(8, 'WAVE');
-    writeString(12, 'fmt ');
-    view.setUint32(16, 16, true);
-    view.setUint16(20, 1, true);
-    view.setUint16(22, 1, true);
-    view.setUint32(24, sampleRate, true);
-    view.setUint32(28, sampleRate * 2, true);
-    view.setUint16(32, 2, true);
-    view.setUint16(34, 16, true);
-    writeString(36, 'data');
-    view.setUint32(40, length * 2, true);
-    
-    // Crear una melodía suave y repetitiva
-    for (let i = 0; i < length; i++) {
-      const t = i / sampleRate;
-      // Frecuencia base más alta y audible
-      const baseFreq = 400;
-      const modulation = Math.sin(2 * Math.PI * 0.5 * t) * 100; // Modulación más amplia
-      const frequency = baseFreq + modulation;
-      
-      // Crear una onda suave con envelope
-      const envelope = Math.sin(2 * Math.PI * t) * 0.5 + 0.5; // Envelope suave
-      const sample = Math.sin(2 * Math.PI * frequency * t) * envelope * 0.2 * 32767; // Más volumen
-      
-      view.setInt16(44 + i * 2, Math.max(-32767, Math.min(32767, sample)), true);
-    }
-    
-    return new Blob([buffer], { type: 'audio/wav' });
-  }, []);
 
   // Crear datos de audio más robustos
   const createRobustAudioData = useCallback((frequency: number, duration: number, volume: number = 0.1) => {
@@ -132,11 +86,9 @@ export const useAudioPool = () => {
       // Crear datos de audio
       const tickData = createRobustAudioData(1000, 0.15, 0.2); // Más largo y más fuerte
       const finishData = createRobustAudioData(800, 0.8, 0.4);
-      const backgroundData = createBackgroundMusicData(); // Música de fondo
 
       const tickUrl = URL.createObjectURL(tickData);
       const finishUrl = URL.createObjectURL(finishData);
-      const backgroundUrl = URL.createObjectURL(backgroundData);
 
       const tickPool: HTMLAudioElement[] = [];
       const finishPool: HTMLAudioElement[] = [];
@@ -163,8 +115,8 @@ export const useAudioPool = () => {
         finishPool.push(finishAudio);
       }
 
-      // Crear música de fondo
-      const backgroundMusic = new Audio(backgroundUrl);
+      // Crear música de fondo usando archivo real
+      const backgroundMusic = new Audio('/background-music.mp3');
       backgroundMusic.loop = true;
       backgroundMusic.volume = isMobile() ? 0.3 : 0.2; // Más audible
       backgroundMusic.preload = 'auto';
@@ -307,11 +259,32 @@ export const useAudioPool = () => {
     if (audioState.current.backgroundMusic && !audioState.current.backgroundMusicPlaying) {
       try {
         console.log('Intentando iniciar música de fondo...');
+        
+        // Verificar si el archivo está cargado
+        if (audioState.current.backgroundMusic.readyState < 2) {
+          console.log('Esperando a que se cargue el archivo de música...');
+          await new Promise((resolve, reject) => {
+            const timeout = setTimeout(() => reject(new Error('Timeout cargando música')), 5000);
+            audioState.current.backgroundMusic!.addEventListener('canplay', () => {
+              clearTimeout(timeout);
+              resolve(void 0);
+            });
+            audioState.current.backgroundMusic!.addEventListener('error', (e) => {
+              clearTimeout(timeout);
+              reject(e);
+            });
+          });
+        }
+        
         await audioState.current.backgroundMusic.play();
         audioState.current.backgroundMusicPlaying = true;
         console.log('Música de fondo iniciada exitosamente');
       } catch (error) {
         console.warn('Error iniciando música de fondo:', error);
+        // Intentar recargar el archivo
+        if (audioState.current.backgroundMusic) {
+          audioState.current.backgroundMusic.load();
+        }
       }
     } else {
       console.log('Música de fondo no disponible o ya reproduciéndose');
