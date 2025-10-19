@@ -163,33 +163,24 @@ export const PresetGridModal: FC<PresetGridModalProps> = ({
                         }
                       }}
                     >
-                      {(() => {
-                        const labelText = String(preset.label || '');
-                        const timeText = String(formatTime(preset.seconds) || '');
-                        
-                        return (
-                          <>
-                            {/* Emoji */}
-                            <motion.span
-                              className="text-3xl mb-2"
-                              whileHover={{ scale: 1.1, rotate: 5 }}
-                              transition={{ duration: 0.2 }}
-                            >
-                              {preset.emoji}
-                            </motion.span>
+                      {/* Emoji */}
+                      <motion.span
+                        className="text-3xl mb-2"
+                        whileHover={{ scale: 1.1, rotate: 5 }}
+                        transition={{ duration: 0.2 }}
+                      >
+                        {preset.emoji}
+                      </motion.span>
 
-                            {/* Label */}
-                            <div className="text-sm font-medium text-white text-center mb-1">
-                              {labelText}
-                            </div>
+                      {/* Label */}
+                      <div className="text-sm font-medium text-white text-center mb-1">
+                        {(preset as any).label}
+                      </div>
 
-                            {/* Tiempo */}
-                            <div className="text-xs text-white/60 font-mono">
-                              {timeText}
-                            </div>
-                          </>
-                        );
-                      })()}
+                      {/* Tiempo */}
+                      <div className="text-xs text-white/60 font-mono">
+                        {formatTime((preset as any).seconds)}
+                      </div>
 
                       {/* Indicador de preset personalizado */}
                       {'isCustom' in preset && preset.isCustom && (
