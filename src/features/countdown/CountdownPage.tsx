@@ -13,7 +13,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import type { AppSettings } from '../../types';
 import { formatTime } from '../../shared/utils/time';
-import { useAudio } from '../../shared/hooks/useAudio';
+import { useAudioFiles } from '../../shared/hooks/useAudioFiles';
 
 interface CountdownPageProps {
   totalSeconds: number;
@@ -34,8 +34,8 @@ const CountdownPage: React.FC<CountdownPageProps> = ({
   const [isFinished, setIsFinished] = useState(false);
   const [audioInitialized, setAudioInitialized] = useState(false);
 
-  // Hook personalizado para manejo de audio
-  const { playTickSound, playFinishSound, initializeAudio, startKeepAlive, stopKeepAlive, playSilentSound } = useAudio();
+  // Hook personalizado para manejo de audio con archivos
+  const { playTickSound, playFinishSound, initializeAudio } = useAudioFiles();
 
   // Inicializar audio cuando el usuario interactúe
   useEffect(() => {
@@ -58,25 +58,6 @@ const CountdownPage: React.FC<CountdownPageProps> = ({
     };
   }, [settings.soundsEnabled, initializeAudio]);
 
-  // Sistema de reactivación de audio en tiempo real
-  useEffect(() => {
-    if (!isRunning || !settings.soundsEnabled) return;
-
-    const handleTouch = async () => {
-      await initializeAudio();
-    };
-
-    // Agregar listeners continuos para mantener audio activo
-    document.addEventListener('touchstart', handleTouch);
-    document.addEventListener('touchmove', handleTouch);
-    document.addEventListener('touchend', handleTouch);
-
-    return () => {
-      document.removeEventListener('touchstart', handleTouch);
-      document.removeEventListener('touchmove', handleTouch);
-      document.removeEventListener('touchend', handleTouch);
-    };
-  }, [isRunning, settings.soundsEnabled, initializeAudio]);
 
   // Función para activar audio manualmente
   const handleActivateAudio = useCallback(async () => {
@@ -89,14 +70,8 @@ const CountdownPage: React.FC<CountdownPageProps> = ({
   // Efecto para el countdown
   useEffect(() => {
     let interval: NodeJS.Timeout;
-    let keepAliveInterval: NodeJS.Timeout | null = null;
 
     if (isRunning && timeLeft > 0) {
-      // Iniciar el keep-alive para móviles
-      if (settings.soundsEnabled) {
-        keepAliveInterval = startKeepAlive();
-      }
-
       interval = setInterval(() => {
         setTimeLeft(prev => {
           if (prev <= 1) {
@@ -106,13 +81,8 @@ const CountdownPage: React.FC<CountdownPageProps> = ({
           }
           
           // Reproducir tick cada segundo (excepto en el último segundo)
-          if (prev > 1) {
-            if (settings.soundsEnabled) {
-              playTickSound();
-            } else {
-              // Reproducir sonido silencioso para mantener contexto activo
-              playSilentSound();
-            }
+          if (prev > 1 && settings.soundsEnabled) {
+            playTickSound();
           }
           
           return prev - 1;
@@ -122,16 +92,8 @@ const CountdownPage: React.FC<CountdownPageProps> = ({
 
     return () => {
       if (interval) clearInterval(interval);
-      stopKeepAlive();
     };
-  }, [isRunning, timeLeft, playTickSound, settings.soundsEnabled, startKeepAlive, stopKeepAlive]);
-
-  // Detener keep-alive cuando se pausa
-  useEffect(() => {
-    if (!isRunning) {
-      stopKeepAlive();
-    }
-  }, [isRunning, stopKeepAlive]);
+  }, [isRunning, timeLeft, playTickSound, settings.soundsEnabled]);
 
   // Efecto para cuando termina el temporizador
   useEffect(() => {
@@ -312,16 +274,6 @@ const CountdownPage: React.FC<CountdownPageProps> = ({
               className="px-6 py-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium transition-all duration-200"
             >
               🔊 Activar Sonidos
-            </button>
-          )}
-
-          {/* Botón de reactivación de audio durante countdown */}
-          {settings.soundsEnabled && isRunning && (
-            <button
-              onClick={handleActivateAudio}
-              className="px-4 py-2 rounded-lg bg-orange-600 hover:bg-orange-700 text-white text-xs font-medium transition-all duration-200"
-            >
-              🔄 Reactivar Audio
             </button>
           )}
         </div>
