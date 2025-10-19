@@ -1,36 +1,21 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="es">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Contador regresivo</title>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css" />
-</head>
-<body>
-
-  <!-- Pantalla de configuración -->
-  <div id="setup-screen" class="screen active">
-    <h2>Configura el tiempo</h2>
-    <div class="inputs">
-      <input type="number" id="minutes" placeholder="Min" min="0" />
-      <input type="number" id="seconds" placeholder="Seg" min="0" max="59" />
-    </div>
-    <button id="goToCountdownBtn">Aceptar</button>
-  </div>
-
-  <!-- Pantalla del contador -->
-  <div id="countdown-screen" class="screen">
-    <div class="odometer" id="countdown"></div>
-    <div class="controls">
-      <button id="startBtn">Iniciar</button>
-      <button id="pauseBtn" disabled>Pausar</button>
-      <button id="backBtn">← Cambiar tiempo</button>
-    </div>
-  </div>
-
-  <!-- Los sonidos se generan sintéticamente usando Web Audio API -->
-
-  <script src="script.js"></script>
-</body>
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <meta name="theme-color" content="#0C0C0D" />
+    <meta name="description" content="Configurador de temporizador con display tipo odómetro" />
+    
+    <!-- Fuentes de Google -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <title>Configurador de Temporizador</title>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
 </html>
