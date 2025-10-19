@@ -19,6 +19,10 @@ const App = () => {
     theme: 'dark'
   });
 
+  // Estado para la música de fondo
+  const [backgroundMusic, setBackgroundMusic] = useState<HTMLAudioElement | null>(null);
+  const [isMusicMuted, setIsMusicMuted] = useState(false);
+
   // Temas disponibles
   const themes = {
     dark: {
@@ -48,6 +52,41 @@ const App = () => {
   };
 
   const currentTheme = themes[settings.theme as keyof typeof themes];
+
+  // Función para iniciar música de fondo
+  const startBackgroundMusic = async () => {
+    if (backgroundMusic) {
+      backgroundMusic.pause();
+      backgroundMusic.currentTime = 0;
+    }
+    
+    try {
+      const audio = new Audio('/background-music.mp3');
+      audio.volume = isMusicMuted ? 0 : 0.3;
+      audio.loop = true;
+      await audio.play();
+      setBackgroundMusic(audio);
+      console.log('🎵 Música de fondo iniciada');
+    } catch (error) {
+      console.error('🎵 Error iniciando música:', error);
+    }
+  };
+
+  // Función para detener música de fondo
+  const stopBackgroundMusic = () => {
+    if (backgroundMusic) {
+      backgroundMusic.pause();
+      backgroundMusic.currentTime = 0;
+    }
+  };
+
+  // Función para toggle mute
+  const toggleMusicMute = () => {
+    setIsMusicMuted(!isMusicMuted);
+    if (backgroundMusic) {
+      backgroundMusic.volume = !isMusicMuted ? 0 : 0.3;
+    }
+  };
   const [history, setHistory] = useState<Array<{
     id: string;
     duration: number;
@@ -64,42 +103,6 @@ const App = () => {
                  CounterDown
                </h1>
 
-        {/* BOTÓN DE PRUEBA SÚPER VISIBLE EN LANDING */}
-        <div className="mb-8 p-6 bg-yellow-500 border-4 border-yellow-600 shadow-2xl rounded-2xl">
-          <div className="text-center mb-2">
-            <span className="text-yellow-900 font-bold text-sm">🔧 BOTÓN DE PRUEBA 🔧</span>
-          </div>
-          <button
-            onClick={async () => {
-              console.log('🎵 BOTÓN DE PRUEBA CLICKEADO 🎵');
-              try {
-                // Crear un audio simple para probar
-                const audio = new Audio('/background-music.mp3');
-                audio.volume = 0.5;
-                audio.loop = true;
-                
-                console.log('🎵 Intentando reproducir música...');
-                await audio.play();
-                console.log('🎵 Música iniciada exitosamente');
-                alert('¡Música iniciada! Revisa la consola para logs.');
-              } catch (error) {
-                console.error('🎵 Error reproduciendo música:', error);
-                alert('Error: ' + error.message);
-              }
-            }}
-            className="w-full py-6 px-8 bg-green-500 hover:bg-green-600 text-white font-black text-2xl rounded-2xl shadow-2xl border-8 border-green-300 animate-bounce"
-            style={{
-              background: 'linear-gradient(45deg, #10B981, #059669)',
-              boxShadow: '0 0 30px rgba(16, 185, 129, 0.8), inset 0 2px 4px rgba(255,255,255,0.3)',
-              textShadow: '2px 2px 4px rgba(0,0,0,0.5)'
-            }}
-          >
-            🎵 BOTÓN DE PRUEBA 🎵
-          </button>
-          <div className="text-center mt-2">
-            <span className="text-yellow-800 font-bold text-xs">¡Haz clic aquí para probar!</span>
-          </div>
-        </div>
 
         {/* Display odómetro */}
         <div className="mb-8">
@@ -205,12 +208,23 @@ const App = () => {
                  <span className="font-bold">←</span> Volver
                </button>
                
-               <button
-                 onClick={() => setCurrentPage('settings')}
-                 className="flex items-center gap-2 text-white/60 hover:text-white transition-colors"
-               >
-                 ⚙️
-               </button>
+               <div className="flex items-center gap-4">
+                 <button
+                   onClick={toggleMusicMute}
+                   className={`flex items-center gap-2 transition-colors ${
+                     isMusicMuted ? 'text-red-400 hover:text-red-300' : 'text-white/60 hover:text-white'
+                   }`}
+                 >
+                   {isMusicMuted ? '🔇' : '🔊'}
+                 </button>
+                 
+                 <button
+                   onClick={() => setCurrentPage('settings')}
+                   className="flex items-center gap-2 text-white/60 hover:text-white transition-colors"
+                 >
+                   ⚙️
+                 </button>
+               </div>
              </div>
 
              {/* Contenido centrado */}
@@ -509,8 +523,14 @@ const App = () => {
   // };
 
   // Función para iniciar/pausar
-  const toggleTimer = () => {
-    setIsRunning(!isRunning);
+  const toggleTimer = async () => {
+    if (isRunning) {
+      setIsRunning(false);
+      stopBackgroundMusic();
+    } else {
+      setIsRunning(true);
+      await startBackgroundMusic();
+    }
   };
 
   // Función para resetear
