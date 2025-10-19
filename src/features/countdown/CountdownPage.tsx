@@ -35,7 +35,7 @@ const CountdownPage: React.FC<CountdownPageProps> = ({
   const [audioInitialized, setAudioInitialized] = useState(false);
 
   // Hook personalizado para manejo de audio con pool
-  const { playTickSound, playFinishSound, initializeAudio, reactivateAudio, audioLost } = useAudioPool();
+  const { playTickSound, playFinishSound, initializeAudio, reactivateAudio, startBackgroundMusic, stopBackgroundMusic, audioLost } = useAudioPool();
 
   // Inicializar audio cuando el usuario interactúe
   useEffect(() => {
@@ -115,6 +115,11 @@ const CountdownPage: React.FC<CountdownPageProps> = ({
     let interval: NodeJS.Timeout;
 
     if (isRunning && timeLeft > 0) {
+      // Iniciar música de fondo al comenzar countdown
+      if (settings.soundsEnabled) {
+        startBackgroundMusic();
+      }
+
       interval = setInterval(() => {
         setTimeLeft(prev => {
           if (prev <= 1) {
@@ -131,16 +136,22 @@ const CountdownPage: React.FC<CountdownPageProps> = ({
           return prev - 1;
         });
       }, 1000);
+    } else {
+      // Detener música de fondo cuando se pausa o detiene
+      stopBackgroundMusic();
     }
 
     return () => {
       if (interval) clearInterval(interval);
     };
-  }, [isRunning, timeLeft, playTickSound, settings.soundsEnabled]);
+  }, [isRunning, timeLeft, playTickSound, settings.soundsEnabled, startBackgroundMusic, stopBackgroundMusic]);
 
   // Efecto para cuando termina el temporizador
   useEffect(() => {
     if (isFinished) {
+      // Detener música de fondo
+      stopBackgroundMusic();
+      
       // Sonido de finalización
       if (settings.soundsEnabled) {
         playFinishSound();
@@ -159,7 +170,7 @@ const CountdownPage: React.FC<CountdownPageProps> = ({
         });
       }
     }
-  }, [isFinished, settings]);
+  }, [isFinished, settings, stopBackgroundMusic, playFinishSound]);
 
   // Manejar inicio/pausa
   const handleToggle = useCallback(() => {

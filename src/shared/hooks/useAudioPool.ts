@@ -3,22 +3,26 @@ import { useCallback, useRef, useEffect, useState } from 'react';
 interface AudioPoolState {
   tickPool: HTMLAudioElement[];
   finishPool: HTMLAudioElement[];
+  backgroundMusic: HTMLAudioElement | null;
   currentTickIndex: number;
   currentFinishIndex: number;
   isInitialized: boolean;
   audioLost: boolean;
   lastPlayTime: number;
+  backgroundMusicPlaying: boolean;
 }
 
 export const useAudioPool = () => {
   const audioState = useRef<AudioPoolState>({
     tickPool: [],
     finishPool: [],
+    backgroundMusic: null,
     currentTickIndex: 0,
     currentFinishIndex: 0,
     isInitialized: false,
     audioLost: false,
-    lastPlayTime: 0
+    lastPlayTime: 0,
+    backgroundMusicPlaying: false
   });
 
   const [audioLost, setAudioLost] = useState(false);
@@ -28,6 +32,53 @@ export const useAudioPool = () => {
     return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ||
            ('ontouchstart' in window) ||
            (navigator.maxTouchPoints > 0);
+  }, []);
+
+  // Crear música de fondo suave y continua
+  const createBackgroundMusicData = useCallback(() => {
+    const sampleRate = 44100;
+    const duration = 1.0; // 1 segundo de loop
+    const length = sampleRate * duration;
+    const buffer = new ArrayBuffer(44 + length * 2);
+    const view = new DataView(buffer);
+    
+    // WAV header
+    const writeString = (offset: number, string: string) => {
+      for (let i = 0; i < string.length; i++) {
+        view.setUint8(offset + i, string.charCodeAt(i));
+      }
+    };
+    
+    writeString(0, 'RIFF');
+    view.setUint32(4, 36 + length * 2, true);
+    writeString(8, 'WAVE');
+    writeString(12, 'fmt ');
+    view.setUint32(16, 16, true);
+    view.setUint16(20, 1, true);
+    view.setUint16(22, 1, true);
+    view.setUint32(24, sampleRate, true);
+    view.setUint32(28, sampleRate * 2, true);
+    view.setUint16(32, 2, true);
+    view.setUint16(34, 16, true);
+    writeString(36, 'data');
+    view.setUint32(40, length * 2, true);
+    
+    // Crear una melodía suave y repetitiva
+    for (let i = 0; i < length; i++) {
+      const t = i / sampleRate;
+      // Frecuencia base muy baja con modulación suave
+      const baseFreq = 200;
+      const modulation = Math.sin(2 * Math.PI * 0.5 * t) * 50; // Modulación lenta
+      const frequency = baseFreq + modulation;
+      
+      // Crear una onda suave con envelope
+      const envelope = Math.sin(2 * Math.PI * t) * 0.5 + 0.5; // Envelope suave
+      const sample = Math.sin(2 * Math.PI * frequency * t) * envelope * 0.05 * 32767;
+      
+      view.setInt16(44 + i * 2, Math.max(-32767, Math.min(32767, sample)), true);
+    }
+    
+    return new Blob([buffer], { type: 'audio/wav' });
   }, []);
 
   // Crear datos de audio más robustos
@@ -81,9 +132,11 @@ export const useAudioPool = () => {
       // Crear datos de audio
       const tickData = createRobustAudioData(1000, 0.15, 0.2); // Más largo y más fuerte
       const finishData = createRobustAudioData(800, 0.8, 0.4);
+      const backgroundData = createBackgroundMusicData(); // Música de fondo
 
       const tickUrl = URL.createObjectURL(tickData);
       const finishUrl = URL.createObjectURL(finishData);
+      const backgroundUrl = URL.createObjectURL(backgroundData);
 
       const tickPool: HTMLAudioElement[] = [];
       const finishPool: HTMLAudioElement[] = [];
@@ -110,14 +163,23 @@ export const useAudioPool = () => {
         finishPool.push(finishAudio);
       }
 
+      // Crear música de fondo
+      const backgroundMusic = new Audio(backgroundUrl);
+      backgroundMusic.loop = true;
+      backgroundMusic.volume = isMobile() ? 0.1 : 0.05; // Muy suave
+      backgroundMusic.preload = 'auto';
+      backgroundMusic.load();
+
       audioState.current = {
         tickPool,
         finishPool,
+        backgroundMusic,
         currentTickIndex: 0,
         currentFinishIndex: 0,
         isInitialized: true,
         audioLost: false,
-        lastPlayTime: 0
+        lastPlayTime: 0,
+        backgroundMusicPlaying: false
       };
 
       return true;
@@ -240,6 +302,29 @@ export const useAudioPool = () => {
     }
   }, [initializeAudio]);
 
+  // Iniciar música de fondo
+  const startBackgroundMusic = useCallback(async () => {
+    if (audioState.current.backgroundMusic && !audioState.current.backgroundMusicPlaying) {
+      try {
+        await audioState.current.backgroundMusic.play();
+        audioState.current.backgroundMusicPlaying = true;
+        console.log('Música de fondo iniciada');
+      } catch (error) {
+        console.warn('Error iniciando música de fondo:', error);
+      }
+    }
+  }, []);
+
+  // Detener música de fondo
+  const stopBackgroundMusic = useCallback(() => {
+    if (audioState.current.backgroundMusic && audioState.current.backgroundMusicPlaying) {
+      audioState.current.backgroundMusic.pause();
+      audioState.current.backgroundMusic.currentTime = 0;
+      audioState.current.backgroundMusicPlaying = false;
+      console.log('Música de fondo detenida');
+    }
+  }, []);
+
   // Reactivar audio
   const reactivateAudio = useCallback(async () => {
     // Recargar todas las instancias
@@ -250,10 +335,15 @@ export const useAudioPool = () => {
       audio.load();
     });
 
+    // Reiniciar música de fondo si estaba reproduciéndose
+    if (audioState.current.backgroundMusicPlaying) {
+      await startBackgroundMusic();
+    }
+
     audioState.current.audioLost = false;
     setAudioLost(false);
     console.log('Audio pool reactivado');
-  }, []);
+  }, [startBackgroundMusic]);
 
   // Limpiar recursos
   const cleanup = useCallback(() => {
@@ -266,14 +356,21 @@ export const useAudioPool = () => {
       audio.src = '';
     });
     
+    if (audioState.current.backgroundMusic) {
+      audioState.current.backgroundMusic.pause();
+      audioState.current.backgroundMusic.src = '';
+    }
+    
     audioState.current = {
       tickPool: [],
       finishPool: [],
+      backgroundMusic: null,
       currentTickIndex: 0,
       currentFinishIndex: 0,
       isInitialized: false,
       audioLost: false,
-      lastPlayTime: 0
+      lastPlayTime: 0,
+      backgroundMusicPlaying: false
     };
     setAudioLost(false);
   }, []);
@@ -294,6 +391,8 @@ export const useAudioPool = () => {
     playFinishSound,
     initializeAudio,
     reactivateAudio,
+    startBackgroundMusic,
+    stopBackgroundMusic,
     audioLost,
     cleanup
   };
