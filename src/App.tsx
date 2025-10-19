@@ -62,7 +62,7 @@ const App = () => {
     
     try {
       const audio = new Audio('/background-music.mp3');
-      audio.volume = isMusicMuted ? 0 : 0.3;
+      audio.volume = isMusicMuted ? 0 : 0.2;
       audio.loop = true;
       await audio.play();
       setBackgroundMusic(audio);
@@ -84,7 +84,7 @@ const App = () => {
         } else {
           backgroundMusic.pause();
           backgroundMusic.currentTime = 0;
-          backgroundMusic.volume = 0.3; // Restaurar volumen para próxima vez
+          backgroundMusic.volume = 0.2; // Restaurar volumen para próxima vez
         }
       };
       fadeOut();
@@ -95,7 +95,7 @@ const App = () => {
   const toggleMusicMute = () => {
     setIsMusicMuted(!isMusicMuted);
     if (backgroundMusic) {
-      backgroundMusic.volume = !isMusicMuted ? 0 : 0.3;
+      backgroundMusic.volume = !isMusicMuted ? 0 : 0.2;
     }
   };
   const [history, setHistory] = useState<Array<{
