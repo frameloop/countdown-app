@@ -13,7 +13,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import type { AppSettings } from '../../types';
 import { formatTime } from '../../shared/utils/time';
-import { useAudioFiles } from '../../shared/hooks/useAudioFiles';
+import { useHybridAudio } from '../../shared/hooks/useHybridAudio';
 
 interface CountdownPageProps {
   totalSeconds: number;
@@ -34,8 +34,8 @@ const CountdownPage: React.FC<CountdownPageProps> = ({
   const [isFinished, setIsFinished] = useState(false);
   const [audioInitialized, setAudioInitialized] = useState(false);
 
-  // Hook personalizado para manejo de audio con archivos
-  const { playTickSound, playFinishSound, initializeAudio } = useAudioFiles();
+  // Hook personalizado para manejo de audio híbrido
+  const { playTickSound, playFinishSound, initializeAudio, reactivateAudio, audioLost } = useHybridAudio();
 
   // Inicializar audio cuando el usuario interactúe
   useEffect(() => {
@@ -58,6 +58,29 @@ const CountdownPage: React.FC<CountdownPageProps> = ({
     };
   }, [settings.soundsEnabled, initializeAudio]);
 
+  // Sistema de reactivación automática en tiempo real
+  useEffect(() => {
+    if (!isRunning || !settings.soundsEnabled) return;
+
+    const handleTouch = async () => {
+      if (audioLost) {
+        await reactivateAudio();
+      }
+    };
+
+    // Agregar listeners para reactivación automática
+    document.addEventListener('touchstart', handleTouch);
+    document.addEventListener('touchmove', handleTouch);
+    document.addEventListener('touchend', handleTouch);
+    document.addEventListener('click', handleTouch);
+
+    return () => {
+      document.removeEventListener('touchstart', handleTouch);
+      document.removeEventListener('touchmove', handleTouch);
+      document.removeEventListener('touchend', handleTouch);
+      document.removeEventListener('click', handleTouch);
+    };
+  }, [isRunning, settings.soundsEnabled, audioLost, reactivateAudio]);
 
   // Función para activar audio manualmente
   const handleActivateAudio = useCallback(async () => {
@@ -275,6 +298,21 @@ const CountdownPage: React.FC<CountdownPageProps> = ({
             >
               🔊 Activar Sonidos
             </button>
+          )}
+
+          {/* Indicador de pérdida de audio */}
+          {settings.soundsEnabled && audioLost && (
+            <div className="flex flex-col items-center gap-2">
+              <div className="px-4 py-2 rounded-lg bg-red-600/20 border border-red-500/30 text-red-400 text-sm">
+                ⚠️ Audio perdido - Toca para reactivar
+              </div>
+              <button
+                onClick={reactivateAudio}
+                className="px-4 py-2 rounded-lg bg-red-600 hover:bg-red-700 text-white text-sm font-medium transition-all duration-200"
+              >
+                🔄 Reactivar Audio
+              </button>
+            </div>
           )}
         </div>
 
