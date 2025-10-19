@@ -163,30 +163,33 @@ export const PresetGridModal: FC<PresetGridModalProps> = ({
                         }
                       }}
                     >
-                      {/* Emoji */}
-                      <motion.span
-                        className="text-3xl mb-2"
-                        whileHover={{ scale: 1.1, rotate: 5 }}
-                        transition={{ duration: 0.2 }}
-                      >
-                        {preset.emoji}
-                      </motion.span>
+                      {(() => {
+                        const labelText = String(preset.label || '');
+                        const timeText = String(formatTime(preset.seconds) || '');
+                        
+                        return (
+                          <>
+                            {/* Emoji */}
+                            <motion.span
+                              className="text-3xl mb-2"
+                              whileHover={{ scale: 1.1, rotate: 5 }}
+                              transition={{ duration: 0.2 }}
+                            >
+                              {preset.emoji}
+                            </motion.span>
 
-                      {/* Label */}
-                      <div className="text-sm font-medium text-white text-center mb-1">
-                        {(() => {
-                          const label = preset.label;
-                          return typeof label === 'string' ? label : String(label || '');
-                        })()}
-                      </div>
+                            {/* Label */}
+                            <div className="text-sm font-medium text-white text-center mb-1">
+                              {labelText}
+                            </div>
 
-                      {/* Tiempo */}
-                      <div className="text-xs text-white/60 font-mono">
-                        {(() => {
-                          const time = formatTime(preset.seconds);
-                          return typeof time === 'string' ? time : String(time || '');
-                        })()}
-                      </div>
+                            {/* Tiempo */}
+                            <div className="text-xs text-white/60 font-mono">
+                              {timeText}
+                            </div>
+                          </>
+                        );
+                      })()}
 
                       {/* Indicador de preset personalizado */}
                       {'isCustom' in preset && preset.isCustom && (
