@@ -13,6 +13,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import type { AppSettings } from '../../types';
 import { formatTime } from '../../shared/utils/time';
+import { useAudio } from '../../shared/hooks/useAudio';
 
 interface CountdownPageProps {
   totalSeconds: number;
@@ -31,12 +32,51 @@ const CountdownPage: React.FC<CountdownPageProps> = ({
   const [isRunning, setIsRunning] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
   const [isFinished, setIsFinished] = useState(false);
+  const [audioInitialized, setAudioInitialized] = useState(false);
+
+  // Hook personalizado para manejo de audio
+  const { playTickSound, playFinishSound, initializeAudio, startKeepAlive, playSilentSound } = useAudio();
+
+  // Inicializar audio cuando el usuario interactúe
+  useEffect(() => {
+    const handleUserInteraction = async () => {
+      if (settings.soundsEnabled) {
+        await initializeAudio();
+        setAudioInitialized(true);
+      }
+    };
+
+    // Agregar listeners para interacción del usuario
+    document.addEventListener('touchstart', handleUserInteraction, { once: true });
+    document.addEventListener('click', handleUserInteraction, { once: true });
+    document.addEventListener('keydown', handleUserInteraction, { once: true });
+
+    return () => {
+      document.removeEventListener('touchstart', handleUserInteraction);
+      document.removeEventListener('click', handleUserInteraction);
+      document.removeEventListener('keydown', handleUserInteraction);
+    };
+  }, [settings.soundsEnabled, initializeAudio]);
+
+  // Función para activar audio manualmente
+  const handleActivateAudio = useCallback(async () => {
+    if (settings.soundsEnabled) {
+      await initializeAudio();
+      setAudioInitialized(true);
+    }
+  }, [settings.soundsEnabled, initializeAudio]);
 
   // Efecto para el countdown
   useEffect(() => {
     let interval: NodeJS.Timeout;
+    let keepAliveInterval: NodeJS.Timeout | null = null;
 
     if (isRunning && timeLeft > 0) {
+      // Iniciar el keep-alive para móviles
+      if (settings.soundsEnabled) {
+        keepAliveInterval = startKeepAlive();
+      }
+
       interval = setInterval(() => {
         setTimeLeft(prev => {
           if (prev <= 1) {
@@ -44,6 +84,15 @@ const CountdownPage: React.FC<CountdownPageProps> = ({
             setIsFinished(true);
             return 0;
           }
+          
+          // Reproducir tick cada segundo (excepto en el último segundo)
+          if (prev > 1 && settings.soundsEnabled) {
+            playTickSound();
+          } else if (prev > 1) {
+            // Reproducir sonido silencioso para mantener contexto activo
+            playSilentSound();
+          }
+          
           return prev - 1;
         });
       }, 1000);
@@ -51,28 +100,16 @@ const CountdownPage: React.FC<CountdownPageProps> = ({
 
     return () => {
       if (interval) clearInterval(interval);
+      if (keepAliveInterval) clearInterval(keepAliveInterval);
     };
-  }, [isRunning, timeLeft]);
+  }, [isRunning, timeLeft, playTickSound, settings.soundsEnabled, startKeepAlive]);
 
   // Efecto para cuando termina el temporizador
   useEffect(() => {
     if (isFinished) {
       // Sonido de finalización
       if (settings.soundsEnabled) {
-        // Crear un beep simple
-        const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
-        const oscillator = audioContext.createOscillator();
-        const gainNode = audioContext.createGain();
-        
-        oscillator.connect(gainNode);
-        gainNode.connect(audioContext.destination);
-        
-        oscillator.frequency.setValueAtTime(800, audioContext.currentTime);
-        gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
-        gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5);
-        
-        oscillator.start(audioContext.currentTime);
-        oscillator.stop(audioContext.currentTime + 0.5);
+        playFinishSound();
       }
 
       // Vibración
@@ -212,28 +249,40 @@ const CountdownPage: React.FC<CountdownPageProps> = ({
         </div>
 
         {/* Controles */}
-        <div className="flex gap-4">
-          <button
-            onClick={handleToggle}
-            className={`
-              px-8 py-4 rounded-2xl font-semibold text-lg transition-all duration-200
-              ${isRunning 
-                ? 'bg-red-600 hover:bg-red-700 text-white' 
-                : isFinished
-                ? 'bg-green-600 hover:bg-green-700 text-white'
-                : 'bg-white text-black hover:bg-white/90'
-              }
-            `}
-          >
-            {isFinished ? 'Reiniciar' : isRunning ? 'Pausar' : 'Iniciar'}
-          </button>
-
-          {!isRunning && !isFinished && (
+        <div className="flex flex-col gap-4">
+          <div className="flex gap-4">
             <button
-              onClick={handleRestart}
-              className="px-6 py-4 rounded-2xl border border-white/20 text-white hover:border-white/40 hover:bg-white/10 transition-all duration-200"
+              onClick={handleToggle}
+              className={`
+                px-8 py-4 rounded-2xl font-semibold text-lg transition-all duration-200
+                ${isRunning 
+                  ? 'bg-red-600 hover:bg-red-700 text-white' 
+                  : isFinished
+                  ? 'bg-green-600 hover:bg-green-700 text-white'
+                  : 'bg-white text-black hover:bg-white/90'
+                }
+              `}
             >
-              Reset
+              {isFinished ? 'Reiniciar' : isRunning ? 'Pausar' : 'Iniciar'}
+            </button>
+
+            {!isRunning && !isFinished && (
+              <button
+                onClick={handleRestart}
+                className="px-6 py-4 rounded-2xl border border-white/20 text-white hover:border-white/40 hover:bg-white/10 transition-all duration-200"
+              >
+                Reset
+              </button>
+            )}
+          </div>
+
+          {/* Botón de activación de audio para móviles */}
+          {settings.soundsEnabled && !audioInitialized && (
+            <button
+              onClick={handleActivateAudio}
+              className="px-6 py-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium transition-all duration-200"
+            >
+              🔊 Activar Sonidos
             </button>
           )}
         </div>
