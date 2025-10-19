@@ -9,10 +9,10 @@
  * - Vibración al finalizar
  */
 
-import React, { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { AppSettings } from '../types';
-import { formatTime } from '../utils/time';
+import { AppSettings } from '../../types';
+import { formatTime } from '../../shared/utils/time';
 
 interface CountdownPageProps {
   totalSeconds: number;

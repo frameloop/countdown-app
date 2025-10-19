@@ -12,7 +12,7 @@
  * - Accesibilidad completa
  */
 
-import React, { useReducer, useState, useEffect, useCallback } from 'react';
+import { useReducer, useState, useEffect, useCallback, FC } from 'react';
 import { motion } from 'framer-motion';
 import { TimeSetupProps, TimeState, TimeAction, AppSettings, CustomPreset, NotificationPermission } from '../../types';
 import { DEFAULT_PRESETS, DEFAULT_SETTINGS } from '../../data/presets';
@@ -74,7 +74,7 @@ const timeReducer = (state: TimeState, action: TimeAction): TimeState => {
   }
 };
 
-const TimeSetup: React.FC<TimeSetupProps> = ({ onStart }) => {
+const TimeSetup: FC<TimeSetupProps> = ({ onStart }) => {
   // Estado del tiempo
   const [timeState, dispatch] = useReducer(timeReducer, {
     totalSeconds: 30,

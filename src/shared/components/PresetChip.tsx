@@ -8,12 +8,12 @@
  * - Animaciones suaves al seleccionar
  */
 
-import React from 'react';
+import { FC } from 'react';
 import { motion } from 'framer-motion';
 import { PresetChipProps } from '../../types';
 import { formatTime } from '../utils/time';
 
-export const PresetChip: React.FC<PresetChipProps> = ({
+export const PresetChip: FC<PresetChipProps> = ({
   preset,
   isSelected,
   onSelect,

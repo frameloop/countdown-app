@@ -9,13 +9,13 @@
  * - Animaciones de entrada y salida
  */
 
-import React, { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, FC } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { PresetGridModalProps, CustomPreset } from '../../types';
 import { formatTime } from '../utils/time';
 import { DEFAULT_PRESETS } from '../../data/presets';
 
-export const PresetGridModal: React.FC<PresetGridModalProps> = ({
+export const PresetGridModal: FC<PresetGridModalProps> = ({
   isOpen,
   onClose,
   onSelect,

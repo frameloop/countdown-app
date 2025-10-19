@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 
 // Componente principal de la aplicación
 const App = () => {
@@ -149,7 +149,7 @@ const App = () => {
             }}
             className="px-8 py-4 rounded-2xl font-semibold text-lg bg-white text-black hover:bg-white/90 transition-all duration-200"
           >
-            Continuar al temporizador
+            Iniciar
           </button>
         </div>
       </div>
@@ -165,14 +165,14 @@ const App = () => {
                  onClick={() => setCurrentPage('landing')}
                  className="flex items-center gap-2 text-white/60 hover:text-white transition-colors"
                >
-                 ← Cambiar tiempo
+                 <span className="font-bold">←</span> Volver
                </button>
                
                <button
                  onClick={() => setCurrentPage('settings')}
                  className="flex items-center gap-2 text-white/60 hover:text-white transition-colors"
                >
-                 ⚙️ Configuración
+                 ⚙️
                </button>
              </div>
 
@@ -369,10 +369,10 @@ const App = () => {
 
   // Presets rápidos
   const presets = [
-    { label: '30s', value: 30 },
-    { label: '1min', value: 60 },
-    { label: '2min', value: 120 },
-    { label: '5min', value: 300 }
+    { label: '10s', value: 10 },
+    { label: '20s', value: 20 },
+    { label: '40s', value: 40 },
+    { label: '50s', value: 50 }
   ];
 
   // Función para formatear tiempo
@@ -463,13 +463,13 @@ const App = () => {
     }
   };
 
-  // Función para manejar preset
-  const handlePreset = (value: number) => {
-    setTimeLeft(value);
-    setMinutes(Math.floor(value / 60));
-    setSeconds(value % 60);
-    setIsRunning(false);
-  };
+  // Función para manejar preset (no se usa actualmente)
+  // const handlePreset = (value: number) => {
+  //   setTimeLeft(value);
+  //   setMinutes(Math.floor(value / 60));
+  //   setSeconds(value % 60);
+  //   setIsRunning(false);
+  // };
 
   // Función para iniciar/pausar
   const toggleTimer = () => {

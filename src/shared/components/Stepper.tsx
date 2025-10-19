@@ -8,11 +8,11 @@
  * - Prevención de valores fuera de rango
  */
 
-import React, { useState, useRef, useCallback } from 'react';
+import { useState, useRef, useCallback, useEffect, FC } from 'react';
 import { motion } from 'framer-motion';
 import { StepperProps } from '../../types';
 
-export const Stepper: React.FC<StepperProps> = ({
+export const Stepper: FC<StepperProps> = ({
   value,
   min,
   max,
@@ -26,10 +26,10 @@ export const Stepper: React.FC<StepperProps> = ({
   const [isPressed, setIsPressed] = useState<'increment' | 'decrement' | null>(null);
   const longPressTimer = useRef<NodeJS.Timeout | null>(null);
   const accelerationTimer = useRef<NodeJS.Timeout | null>(null);
-  const [accelerationStep, setAccelerationStep] = useState(step);
+  // const [accelerationStep, setAccelerationStep] = useState(step);
 
   // Limpiar timers al desmontar
-  React.useEffect(() => {
+  useEffect(() => {
     return () => {
       if (longPressTimer.current) clearTimeout(longPressTimer.current);
       if (accelerationTimer.current) clearTimeout(accelerationTimer.current);
@@ -42,7 +42,7 @@ export const Stepper: React.FC<StepperProps> = ({
     
     longPressTimer.current = setTimeout(() => {
       // Iniciar aceleración después de 600ms
-      setAccelerationStep(step * 5); // Saltos de 5x el step original
+      // setAccelerationStep(step * 5); // Saltos de 5x el step original
       
       const repeatAction = () => {
         if (increment) {
@@ -61,7 +61,7 @@ export const Stepper: React.FC<StepperProps> = ({
   // Manejar inicio de presión
   const handlePressStart = (increment: boolean) => {
     setIsPressed(increment ? 'increment' : 'decrement');
-    setAccelerationStep(step);
+    // setAccelerationStep(step);
     
     if (increment) {
       onIncrement();

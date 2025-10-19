@@ -8,11 +8,11 @@
  * - Feedback visual al cambiar estado
  */
 
-import React from 'react';
+import { FC } from 'react';
 import { motion } from 'framer-motion';
 import { ToggleRowProps } from '../../types';
 
-export const ToggleRow: React.FC<ToggleRowProps> = ({
+export const ToggleRow: FC<ToggleRowProps> = ({
   label,
   description,
   enabled,
