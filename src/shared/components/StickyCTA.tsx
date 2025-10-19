@@ -9,9 +9,10 @@
  * - Accesibilidad con aria-labels descriptivos
  */
 
-import { useState, FC } from 'react';
+import { useState } from 'react';
+import type { FC } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { StickyCTAProps } from '../../types';
+import type { StickyCTAProps } from '../../types';
 import { formatTime } from '../utils/time';
 
 export const StickyCTA: FC<StickyCTAProps> = ({

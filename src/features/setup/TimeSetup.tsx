@@ -12,9 +12,10 @@
  * - Accesibilidad completa
  */
 
-import { useReducer, useState, useEffect, useCallback, FC } from 'react';
+import { useReducer, useState, useEffect, useCallback } from 'react';
+import type { FC } from 'react';
 import { motion } from 'framer-motion';
-import { TimeSetupProps, TimeState, TimeAction, AppSettings, CustomPreset, NotificationPermission } from '../../types';
+import type { TimeSetupProps, TimeState, TimeAction, AppSettings, CustomPreset, NotificationPermission } from '../../types';
 import { DEFAULT_PRESETS, DEFAULT_SETTINGS } from '../../data/presets';
 import { getStorageValue, setStorageValue } from '../../shared/utils/storage';
 import { toMinutesAndSeconds, fromMinutesAndSeconds, normalizeSeconds } from '../../shared/utils/time';

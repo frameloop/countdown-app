@@ -8,10 +8,11 @@
  * - Accesibilidad con aria-live para lectores de pantalla
  */
 
-import { useEffect, useState, FC } from 'react';
+import { useEffect, useState } from 'react';
+import type { FC } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { formatTime } from '../utils/time';
-import { TimeDisplayProps } from '../../types';
+import type { TimeDisplayProps } from '../../types';
 
 export const TimeDisplay: FC<TimeDisplayProps> = ({ 
   totalSeconds, 

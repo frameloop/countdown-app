@@ -9,9 +9,10 @@
  * - Animaciones de entrada y salida
  */
 
-import { useState, useEffect, useRef, FC } from 'react';
+import { useState, useEffect, useRef } from 'react';
+import type { FC } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { KeypadModalProps } from '../../types';
+import type { KeypadModalProps } from '../../types';
 import { parseKeypadInput, toKeypadString, formatTime, normalizeSeconds } from '../utils/time';
 
 export const KeypadModal: FC<KeypadModalProps> = ({

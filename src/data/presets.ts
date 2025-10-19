@@ -2,7 +2,7 @@
  * Datos de presets por defecto y configuración de la aplicación
  */
 
-import { Preset } from '../types';
+import type { Preset } from '../types';
 
 /**
  * Presets por defecto de la aplicación

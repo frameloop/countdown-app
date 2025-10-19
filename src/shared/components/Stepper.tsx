@@ -8,9 +8,10 @@
  * - Prevención de valores fuera de rango
  */
 
-import { useState, useRef, useCallback, useEffect, FC } from 'react';
+import { useState, useRef, useCallback, useEffect } from 'react';
+import type { FC } from 'react';
 import { motion } from 'framer-motion';
-import { StepperProps } from '../../types';
+import type { StepperProps } from '../../types';
 
 export const Stepper: FC<StepperProps> = ({
   value,
@@ -20,7 +21,7 @@ export const Stepper: FC<StepperProps> = ({
   label,
   onIncrement,
   onDecrement,
-  onLongPress,
+  // onLongPress, // No se usa actualmente
   className = ''
 }) => {
   const [isPressed, setIsPressed] = useState<'increment' | 'decrement' | null>(null);
@@ -86,7 +87,7 @@ export const Stepper: FC<StepperProps> = ({
       accelerationTimer.current = null;
     }
     
-    setAccelerationStep(step);
+    // setAccelerationStep(step);
   };
 
   // Verificar si los botones deben estar deshabilitados

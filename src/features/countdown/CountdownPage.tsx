@@ -11,21 +11,21 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { AppSettings } from '../../types';
+import type { AppSettings } from '../../types';
 import { formatTime } from '../../shared/utils/time';
 
 interface CountdownPageProps {
   totalSeconds: number;
   settings: AppSettings;
   onBack: () => void;
-  onRestart: () => void;
+  // onRestart: () => void; // No se usa actualmente
 }
 
 const CountdownPage: React.FC<CountdownPageProps> = ({
   totalSeconds,
   settings,
-  onBack,
-  onRestart
+  onBack
+  // onRestart // No se usa actualmente
 }) => {
   const [timeLeft, setTimeLeft] = useState(totalSeconds);
   const [isRunning, setIsRunning] = useState(false);

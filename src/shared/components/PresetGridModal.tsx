@@ -9,9 +9,10 @@
  * - Animaciones de entrada y salida
  */
 
-import { useState, useEffect, useRef, FC } from 'react';
+import { useState, useEffect, useRef } from 'react';
+import type { FC } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { PresetGridModalProps, CustomPreset } from '../../types';
+import type { PresetGridModalProps, CustomPreset } from '../../types';
 import { formatTime } from '../utils/time';
 import { DEFAULT_PRESETS } from '../../data/presets';
 
@@ -173,12 +174,12 @@ export const PresetGridModal: FC<PresetGridModalProps> = ({
 
                       {/* Label */}
                       <div className="text-sm font-medium text-white text-center mb-1">
-                        {preset.label}
+                        {String(preset.label)}
                       </div>
 
                       {/* Tiempo */}
                       <div className="text-xs text-white/60 font-mono">
-                        {formatTime(preset.seconds)}
+                        {String(formatTime(preset.seconds))}
                       </div>
 
                       {/* Indicador de preset personalizado */}
