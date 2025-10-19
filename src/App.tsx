@@ -449,20 +449,45 @@ const App = () => {
     if (!settings.soundsEnabled) return;
     
     try {
-      const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
-      const oscillator = audioContext.createOscillator();
-      const gainNode = audioContext.createGain();
+      // Crear audio data para tick sound
+      const sampleRate = 44100;
+      const duration = 0.1;
+      const frequency = 1000;
+      const length = sampleRate * duration;
+      const buffer = new ArrayBuffer(44 + length * 2);
+      const view = new DataView(buffer);
       
-      oscillator.connect(gainNode);
-      gainNode.connect(audioContext.destination);
+      // WAV header
+      const writeString = (offset: number, string: string) => {
+        for (let i = 0; i < string.length; i++) {
+          view.setUint8(offset + i, string.charCodeAt(i));
+        }
+      };
       
-      // Pitido corto y agudo
-      oscillator.frequency.setValueAtTime(1000, audioContext.currentTime);
-      gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
-      gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.1);
+      writeString(0, 'RIFF');
+      view.setUint32(4, 36 + length * 2, true);
+      writeString(8, 'WAVE');
+      writeString(12, 'fmt ');
+      view.setUint32(16, 16, true);
+      view.setUint16(20, 1, true);
+      view.setUint16(22, 1, true);
+      view.setUint32(24, sampleRate, true);
+      view.setUint32(28, sampleRate * 2, true);
+      view.setUint16(32, 2, true);
+      view.setUint16(34, 16, true);
+      writeString(36, 'data');
+      view.setUint32(40, length * 2, true);
       
-      oscillator.start(audioContext.currentTime);
-      oscillator.stop(audioContext.currentTime + 0.1);
+      // Generar onda senoidal
+      for (let i = 0; i < length; i++) {
+        const sample = Math.sin(2 * Math.PI * frequency * i / sampleRate) * 0.1;
+        view.setInt16(44 + i * 2, sample * 32767, true);
+      }
+      
+      const blob = new Blob([buffer], { type: 'audio/wav' });
+      const audio = new Audio(URL.createObjectURL(blob));
+      audio.volume = 0.3;
+      audio.play().catch(() => {});
     } catch (error) {
       console.warn('No se pudo reproducir el sonido de tick:', error);
     }
@@ -473,20 +498,47 @@ const App = () => {
     if (!settings.soundsEnabled) return;
     
     try {
-      const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
-      const oscillator = audioContext.createOscillator();
-      const gainNode = audioContext.createGain();
+      // Crear audio data para finish sound
+      const sampleRate = 44100;
+      const duration = 1.0;
+      const frequency = 800;
+      const length = sampleRate * duration;
+      const buffer = new ArrayBuffer(44 + length * 2);
+      const view = new DataView(buffer);
       
-      oscillator.connect(gainNode);
-      gainNode.connect(audioContext.destination);
+      // WAV header
+      const writeString = (offset: number, string: string) => {
+        for (let i = 0; i < string.length; i++) {
+          view.setUint8(offset + i, string.charCodeAt(i));
+        }
+      };
       
-      // Pitido largo de finalización
-      oscillator.frequency.setValueAtTime(800, audioContext.currentTime);
-      gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
-      gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 1.0);
+      writeString(0, 'RIFF');
+      view.setUint32(4, 36 + length * 2, true);
+      writeString(8, 'WAVE');
+      writeString(12, 'fmt ');
+      view.setUint32(16, 16, true);
+      view.setUint16(20, 1, true);
+      view.setUint16(22, 1, true);
+      view.setUint32(24, sampleRate, true);
+      view.setUint32(28, sampleRate * 2, true);
+      view.setUint16(32, 2, true);
+      view.setUint16(34, 16, true);
+      writeString(36, 'data');
+      view.setUint32(40, length * 2, true);
       
-      oscillator.start(audioContext.currentTime);
-      oscillator.stop(audioContext.currentTime + 1.0);
+      // Generar onda senoidal con fade out
+      for (let i = 0; i < length; i++) {
+        const time = i / sampleRate;
+        const fadeOut = Math.exp(-time * 3); // Fade out exponencial
+        const sample = Math.sin(2 * Math.PI * frequency * i / sampleRate) * 0.3 * fadeOut;
+        view.setInt16(44 + i * 2, sample * 32767, true);
+      }
+      
+      const blob = new Blob([buffer], { type: 'audio/wav' });
+      const audio = new Audio(URL.createObjectURL(blob));
+      audio.volume = 0.5;
+      audio.play().catch(() => {});
     } catch (error) {
       console.warn('No se pudo reproducir el sonido de finalización:', error);
     }
