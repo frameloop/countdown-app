@@ -1,0 +1,115 @@
+body {
+  margin: 0;
+  background-color: #000;
+  color: #fff;
+  font-family: 'Inter', sans-serif;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+  overflow: hidden;
+}
+
+h2 {
+  font-size: 2rem;
+  margin-bottom: 1rem;
+  text-align: center;
+}
+
+.inputs {
+  margin-bottom: 1rem;
+}
+
+input {
+  width: 80px;
+  padding: 0.5rem;
+  margin: 0 0.5rem;
+  font-size: 1.5rem;
+  text-align: center;
+  background: #111;
+  border: 2px solid #555;
+  border-radius: 5px;
+  color: white;
+}
+
+button {
+  padding: 0.75rem 1.5rem;
+  font-size: 1rem;
+  margin: 0.5rem;
+  background: #1e1e1e;
+  color: white;
+  border: 2px solid #444;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+button:hover {
+  background: #333;
+}
+
+button:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.controls {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: 1rem;
+  justify-content: center;
+  margin-top: 2rem;
+}
+
+.screen {
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  width: 100%;
+}
+
+.screen.active {
+  display: flex;
+}
+
+.odometer {
+  display: flex;
+  gap: 0.1em;
+  font-size: clamp(4rem, 10vw, 12rem);
+  font-weight: bold;
+  line-height: 1;
+  justify-content: center;
+  align-items: center;
+}
+
+.digit {
+  position: relative;
+  width: 0.8em;
+  height: 1.2em;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.digit-inner {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  transition: transform 0.3s ease-in-out;
+  display: flex;
+  flex-direction: column;
+}
+
+.digit-inner div {
+  height: 1.2em;
+  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+}
