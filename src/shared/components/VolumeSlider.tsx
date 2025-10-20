@@ -95,7 +95,7 @@ const VolumeSlider: React.FC<VolumeSliderProps> = ({
               left: 'auto'
             }}
           >
-            <div className="bg-black/95 backdrop-blur-md border border-white/20 rounded-2xl p-4 shadow-2xl w-[280px] max-w-[calc(100vw-2rem)]">
+            <div className="bg-black/95 backdrop-blur-md border border-white/20 rounded-2xl p-3 shadow-2xl w-[260px] max-w-[calc(100vw-2rem)]">
               {/* Header */}
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-2">
@@ -143,12 +143,12 @@ const VolumeSlider: React.FC<VolumeSliderProps> = ({
               </div>
 
               {/* Botones de volumen rápido */}
-              <div className="flex justify-between gap-2">
+              <div className="flex gap-1">
                 {quickVolumes.map((vol) => (
                   <button
                     key={vol}
                     onClick={() => handleQuickVolume(vol)}
-                    className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-all ${
+                    className={`flex-1 py-2 px-2 rounded-lg text-xs font-medium transition-all ${
                       volume === vol
                         ? 'bg-white text-black'
                         : 'bg-white/10 text-white/80 hover:bg-white/20'
