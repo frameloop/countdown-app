@@ -44,17 +44,7 @@ const VolumeSlider: React.FC<VolumeSliderProps> = ({
     }
   }, [isOpen]);
 
-  // Toggle mute rápido
-  const handleToggleMute = () => {
-    if (volume === 0) {
-      onVolumeChange(lastVolume);
-    } else {
-      setLastVolume(volume);
-      onVolumeChange(0);
-    }
-  };
-
-  // Abrir popup
+  // Abrir popup (solo toque/clic)
   const handleOpenPopup = () => {
     setIsOpen(true);
   };
@@ -79,15 +69,11 @@ const VolumeSlider: React.FC<VolumeSliderProps> = ({
       {/* Botón de volumen */}
       <button
         ref={buttonRef}
-        onClick={handleToggleMute}
-        onContextMenu={(e) => {
-          e.preventDefault();
-          handleOpenPopup();
-        }}
+        onClick={handleOpenPopup}
         className={`flex items-center gap-2 transition-colors ${
           volume === 0 ? 'text-red-400 hover:text-red-300' : 'text-white/60 hover:text-white'
         }`}
-        title="Clic: silenciar/activar | Clic derecho: control de volumen"
+        title="Toca para controlar volumen"
       >
         {volume === 0 ? <VolumeX size={20} /> : <Volume2 size={20} />}
       </button>
@@ -101,17 +87,42 @@ const VolumeSlider: React.FC<VolumeSliderProps> = ({
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.9, y: -10 }}
             transition={{ duration: 0.2, ease: "easeOut" }}
-            className="absolute top-full left-1/2 transform -translate-x-1/2 mt-3 z-50"
+            className="absolute top-full right-0 mt-3 z-50"
+            style={{ 
+              transform: 'translateX(0)',
+              maxWidth: 'calc(100vw - 2rem)',
+              right: '0',
+              left: 'auto'
+            }}
           >
-            <div className="bg-black/95 backdrop-blur-md border border-white/20 rounded-2xl p-4 shadow-2xl min-w-[280px]">
+            <div className="bg-black/95 backdrop-blur-md border border-white/20 rounded-2xl p-4 shadow-2xl w-[280px] max-w-[calc(100vw-2rem)]">
               {/* Header */}
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-2">
                   {volume === 0 ? <VolumeX size={18} className="text-red-400" /> : <Volume2 size={18} className="text-white" />}
                   <span className="text-white font-medium">Volumen</span>
                 </div>
-                <div className="text-white/60 text-sm">
-                  {volume}%
+                <div className="flex items-center gap-2">
+                  <div className="text-white/60 text-sm">
+                    {volume}%
+                  </div>
+                  <button
+                    onClick={() => {
+                      if (volume === 0) {
+                        onVolumeChange(lastVolume);
+                      } else {
+                        setLastVolume(volume);
+                        onVolumeChange(0);
+                      }
+                    }}
+                    className={`px-3 py-1 rounded-lg text-xs font-medium transition-all ${
+                      volume === 0 
+                        ? 'bg-red-500/20 text-red-400 border border-red-500/30' 
+                        : 'bg-white/10 text-white/80 hover:bg-white/20'
+                    }`}
+                  >
+                    {volume === 0 ? 'Activar' : 'Silenciar'}
+                  </button>
                 </div>
               </div>
 
