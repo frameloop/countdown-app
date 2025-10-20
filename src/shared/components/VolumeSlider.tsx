@@ -20,28 +20,35 @@ const VolumeSlider: React.FC<VolumeSliderProps> = ({
   const popupRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
 
-  // Cerrar popup al hacer clic fuera
+  // Cerrar popup al hacer clic fuera (con delay para evitar cierre inmediato)
   useEffect(() => {
+    if (!isOpen) return;
+
     const handleClickOutside = (event: MouseEvent | TouchEvent) => {
       if (
-        isOpen &&
         popupRef.current &&
         buttonRef.current &&
         !popupRef.current.contains(event.target as Node) &&
         !buttonRef.current.contains(event.target as Node)
       ) {
-        setIsOpen(false);
+        // Delay pequeño para evitar cierre inmediato
+        setTimeout(() => {
+          setIsOpen(false);
+        }, 100);
       }
     };
 
-    if (isOpen) {
+    // Delay antes de agregar listeners para evitar cierre inmediato
+    const timer = setTimeout(() => {
       document.addEventListener('mousedown', handleClickOutside);
       document.addEventListener('touchstart', handleClickOutside);
-      return () => {
-        document.removeEventListener('mousedown', handleClickOutside);
-        document.removeEventListener('touchstart', handleClickOutside);
-      };
-    }
+    }, 200);
+
+    return () => {
+      clearTimeout(timer);
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('touchstart', handleClickOutside);
+    };
   }, [isOpen]);
 
   // Abrir popup (solo toque/clic)
@@ -107,7 +114,8 @@ const VolumeSlider: React.FC<VolumeSliderProps> = ({
                     {volume}%
                   </div>
                   <button
-                    onClick={() => {
+                    onClick={(e) => {
+                      e.stopPropagation();
                       if (volume === 0) {
                         onVolumeChange(lastVolume);
                       } else {
@@ -127,7 +135,7 @@ const VolumeSlider: React.FC<VolumeSliderProps> = ({
               </div>
 
               {/* Slider horizontal */}
-              <div className="mb-4">
+              <div className="mb-4" onClick={(e) => e.stopPropagation()}>
                 <input
                   type="range"
                   min="0"
@@ -135,6 +143,7 @@ const VolumeSlider: React.FC<VolumeSliderProps> = ({
                   step="5"
                   value={volume}
                   onChange={handleSliderChange}
+                  onClick={(e) => e.stopPropagation()}
                   className="w-full h-2 bg-white/20 rounded-full appearance-none cursor-pointer"
                   style={{
                     background: `linear-gradient(to right, #3b82f6 0%, #3b82f6 ${volume}%, rgba(255,255,255,0.2) ${volume}%, rgba(255,255,255,0.2) 100%)`
@@ -143,11 +152,14 @@ const VolumeSlider: React.FC<VolumeSliderProps> = ({
               </div>
 
               {/* Botones de volumen rápido */}
-              <div className="flex gap-1">
+              <div className="flex gap-1" onClick={(e) => e.stopPropagation()}>
                 {quickVolumes.map((vol) => (
                   <button
                     key={vol}
-                    onClick={() => handleQuickVolume(vol)}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleQuickVolume(vol);
+                    }}
                     className={`flex-1 py-2 px-2 rounded-lg text-xs font-medium transition-all ${
                       volume === vol
                         ? 'bg-white text-black'
