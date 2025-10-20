@@ -14,6 +14,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import type { AppSettings } from '../../types';
 import { formatTime } from '../../shared/utils/time';
 import { useAudioPool } from '../../shared/hooks/useAudioPool';
+import VolumeSlider from '../../shared/components/VolumeSlider';
+import { useVolumeControl } from '../../shared/hooks/useVolumeControl';
 
 interface CountdownPageProps {
   totalSeconds: number;
@@ -34,8 +36,20 @@ const CountdownPage: React.FC<CountdownPageProps> = ({
   const [isFinished, setIsFinished] = useState(false);
   const [audioInitialized, setAudioInitialized] = useState(false);
 
+  // Hook para control de volumen
+  const { volume: musicVolume, setVolume: setMusicVolume } = useVolumeControl({
+    initialVolume: 50,
+    storageKey: 'music-volume'
+  });
+
   // Hook personalizado para manejo de audio con pool
-  const { playTickSound, playFinishSound, initializeAudio, reactivateAudio, startBackgroundMusic, stopBackgroundMusic, audioLost } = useAudioPool();
+  const { playTickSound, playFinishSound, initializeAudio, reactivateAudio, startBackgroundMusic, stopBackgroundMusic, updateBackgroundMusicVolume, audioLost } = useAudioPool(musicVolume);
+
+  // Función para actualizar volumen de la música en tiempo real
+  const updateMusicVolume = useCallback((newVolume: number) => {
+    setMusicVolume(newVolume);
+    updateBackgroundMusicVolume(newVolume);
+  }, [setMusicVolume, updateBackgroundMusicVolume]);
 
   // Inicializar audio cuando el usuario interactúe
   useEffect(() => {
@@ -213,8 +227,16 @@ const CountdownPage: React.FC<CountdownPageProps> = ({
           ← Volver al setup
         </button>
         
-        <div className="text-sm text-white/40">
-          {isRunning ? 'Ejecutando' : isPaused ? 'Pausado' : isFinished ? 'Terminado' : 'Listo'}
+        <div className="flex items-center gap-4">
+          <VolumeSlider
+            volume={musicVolume}
+            onVolumeChange={updateMusicVolume}
+            isPlaying={isRunning}
+          />
+          
+          <div className="text-sm text-white/40">
+            {isRunning ? 'Ejecutando' : isPaused ? 'Pausado' : isFinished ? 'Terminado' : 'Listo'}
+          </div>
         </div>
       </div>
 

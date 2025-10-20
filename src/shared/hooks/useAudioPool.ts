@@ -12,7 +12,7 @@ interface AudioPoolState {
   backgroundMusicPlaying: boolean;
 }
 
-export const useAudioPool = () => {
+export const useAudioPool = (volume: number = 50) => {
   const audioState = useRef<AudioPoolState>({
     tickPool: [],
     finishPool: [],
@@ -118,7 +118,7 @@ export const useAudioPool = () => {
       // Crear música de fondo usando archivo real
       const backgroundMusic = new Audio('/background-music.mp3');
       backgroundMusic.loop = true;
-      backgroundMusic.volume = isMobile() ? 0.5 : 0.4; // Volumen más alto para testing
+      backgroundMusic.volume = volume / 100; // Usar volumen pasado como parámetro
       backgroundMusic.preload = 'auto';
       
       // Agregar listeners para debugging
@@ -310,6 +310,14 @@ export const useAudioPool = () => {
     }
   }, []);
 
+  // Actualizar volumen de la música de fondo
+  const updateBackgroundMusicVolume = useCallback((newVolume: number) => {
+    if (audioState.current.backgroundMusic) {
+      audioState.current.backgroundMusic.volume = newVolume / 100;
+      console.log('Volumen de música de fondo actualizado:', newVolume);
+    }
+  }, []);
+
   // Reactivar audio
   const reactivateAudio = useCallback(async () => {
     // Recargar todas las instancias
@@ -378,6 +386,7 @@ export const useAudioPool = () => {
     reactivateAudio,
     startBackgroundMusic,
     stopBackgroundMusic,
+    updateBackgroundMusicVolume,
     audioLost,
     cleanup
   };

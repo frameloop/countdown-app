@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Settings, Volume2, VolumeX, Play, Pause, RotateCcw, ArrowLeft, Bell, Vibrate } from 'lucide-react';
+import VolumeSlider from './shared/components/VolumeSlider';
+import { useVolumeControl } from './shared/hooks/useVolumeControl';
 
 // Componente principal de la aplicación
 const App = () => {
@@ -22,7 +24,12 @@ const App = () => {
 
   // Estado para la música de fondo
   const [backgroundMusic, setBackgroundMusic] = useState<HTMLAudioElement | null>(null);
-  const [isMusicMuted, setIsMusicMuted] = useState(false);
+  
+  // Hook para control de volumen
+  const { volume: musicVolume, setVolume: setMusicVolume } = useVolumeControl({
+    initialVolume: 50,
+    storageKey: 'music-volume'
+  });
 
   // Temas disponibles
   const themes = {
@@ -63,7 +70,7 @@ const App = () => {
     
     try {
       const audio = new Audio('/background-music.mp3');
-      audio.volume = isMusicMuted ? 0 : 0.05; // Volumen muy bajo para no interferir con pitidos
+      audio.volume = musicVolume / 100; // Usar volumen del hook
       audio.loop = true;
       await audio.play();
       setBackgroundMusic(audio);
@@ -85,26 +92,18 @@ const App = () => {
         } else {
           backgroundMusic.pause();
           backgroundMusic.currentTime = 0;
-          backgroundMusic.volume = 0.05; // Restaurar volumen muy bajo para próxima vez
+          backgroundMusic.volume = musicVolume / 100; // Restaurar volumen actual
         }
       };
       fadeOut();
     }
   };
 
-  // Función para toggle mute (solo música de fondo, no pitidos)
-  const toggleMusicMute = () => {
-    setIsMusicMuted(!isMusicMuted);
+  // Función para actualizar volumen de la música en tiempo real
+  const updateMusicVolume = (newVolume: number) => {
+    setMusicVolume(newVolume);
     if (backgroundMusic) {
-      if (isMusicMuted) {
-        // Si estaba silenciado, reanudar música
-        backgroundMusic.volume = 0.05; // Volumen muy bajo para no interferir con pitidos
-        backgroundMusic.play().catch(() => {});
-      } else {
-        // Si estaba sonando, silenciar música
-        backgroundMusic.volume = 0;
-        backgroundMusic.pause();
-      }
+      backgroundMusic.volume = newVolume / 100;
     }
   };
   const [history, setHistory] = useState<Array<{
@@ -223,7 +222,10 @@ const App = () => {
              {/* Header con botón de configuración */}
              <div className="flex justify-between items-center mb-8">
                <button
-                 onClick={() => setCurrentPage('landing')}
+                 onClick={() => {
+                   stopBackgroundMusic(); // Parar música al volver
+                   setCurrentPage('landing');
+                 }}
                  className="flex items-center gap-2 text-white/60 hover:text-white transition-colors"
                >
                  <ArrowLeft size={20} />
@@ -231,14 +233,11 @@ const App = () => {
                </button>
                
                <div className="flex items-center gap-4">
-                 <button
-                   onClick={toggleMusicMute}
-                   className={`flex items-center gap-2 transition-colors ${
-                     isMusicMuted ? 'text-red-400 hover:text-red-300' : 'text-white/60 hover:text-white'
-                   }`}
-                 >
-                   {isMusicMuted ? <VolumeX size={20} /> : <Volume2 size={20} />}
-                 </button>
+                 <VolumeSlider
+                   volume={musicVolume}
+                   onVolumeChange={updateMusicVolume}
+                   isPlaying={backgroundMusic !== null}
+                 />
                  
                  <button
                    onClick={() => setCurrentPage('settings')}
@@ -613,6 +612,7 @@ const App = () => {
   const resetTimer = () => {
     setIsRunning(false);
     setTimeLeft(minutes * 60 + seconds);
+    stopBackgroundMusic(); // Parar música al resetear
   };
 
   // Efecto para el countdown
