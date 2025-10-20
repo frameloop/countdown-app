@@ -20,7 +20,7 @@ const VolumeSlider: React.FC<VolumeSliderProps> = ({
   const popupRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
 
-  // Cerrar popup al hacer clic fuera (con delay para evitar cierre inmediato)
+  // Cerrar popup al hacer clic fuera
   useEffect(() => {
     if (!isOpen) return;
 
@@ -31,18 +31,15 @@ const VolumeSlider: React.FC<VolumeSliderProps> = ({
         !popupRef.current.contains(event.target as Node) &&
         !buttonRef.current.contains(event.target as Node)
       ) {
-        // Delay pequeño para evitar cierre inmediato
-        setTimeout(() => {
-          setIsOpen(false);
-        }, 100);
+        setIsOpen(false);
       }
     };
 
-    // Delay antes de agregar listeners para evitar cierre inmediato
+    // Delay para evitar cierre inmediato
     const timer = setTimeout(() => {
       document.addEventListener('mousedown', handleClickOutside);
       document.addEventListener('touchstart', handleClickOutside);
-    }, 200);
+    }, 300);
 
     return () => {
       clearTimeout(timer);
@@ -51,9 +48,9 @@ const VolumeSlider: React.FC<VolumeSliderProps> = ({
     };
   }, [isOpen]);
 
-  // Abrir popup (solo toque/clic)
-  const handleOpenPopup = () => {
-    setIsOpen(true);
+  // Toggle popup (abrir/cerrar)
+  const handleTogglePopup = () => {
+    setIsOpen(!isOpen);
   };
 
   // Cambiar volumen con slider
@@ -76,11 +73,11 @@ const VolumeSlider: React.FC<VolumeSliderProps> = ({
       {/* Botón de volumen */}
       <button
         ref={buttonRef}
-        onClick={handleOpenPopup}
+        onClick={handleTogglePopup}
         className={`flex items-center gap-2 transition-colors ${
           volume === 0 ? 'text-red-400 hover:text-red-300' : 'text-white/60 hover:text-white'
         }`}
-        title="Toca para controlar volumen"
+        title="Toca para abrir/cerrar control de volumen"
       >
         {volume === 0 ? <VolumeX size={20} /> : <Volume2 size={20} />}
       </button>

@@ -104,13 +104,6 @@ const App = () => {
     setMusicVolume(newVolume);
     if (backgroundMusic) {
       backgroundMusic.volume = newVolume / 100;
-      // Si el volumen es 0, pausar la música
-      if (newVolume === 0) {
-        backgroundMusic.pause();
-      } else if (isRunning) {
-        // Si hay volumen y está corriendo, reanudar
-        backgroundMusic.play().catch(() => {});
-      }
     }
   };
   const [history, setHistory] = useState<Array<{
@@ -230,8 +223,7 @@ const App = () => {
              <div className="flex justify-between items-center mb-8">
                <button
                  onClick={() => {
-                   stopBackgroundMusic(); // Parar música al volver
-                   setMusicVolume(0); // Silenciar volumen
+                   stopBackgroundMusic(); // Fade out al volver
                    setCurrentPage('landing');
                  }}
                  className="flex items-center gap-2 text-white/60 hover:text-white transition-colors"
@@ -609,7 +601,7 @@ const App = () => {
   const toggleTimer = async () => {
     if (isRunning) {
       setIsRunning(false);
-      stopBackgroundMusic();
+      stopBackgroundMusic(); // Fade out al pausar
     } else {
       setIsRunning(true);
       await startBackgroundMusic();
@@ -620,9 +612,7 @@ const App = () => {
   const resetTimer = () => {
     setIsRunning(false);
     setTimeLeft(minutes * 60 + seconds);
-    stopBackgroundMusic(); // Parar música al resetear
-    // También silenciar el volumen
-    setMusicVolume(0);
+    stopBackgroundMusic(); // Fade out al resetear
   };
 
   // Efecto para el countdown
