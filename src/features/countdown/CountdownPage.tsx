@@ -210,8 +210,14 @@ const CountdownPage: React.FC<CountdownPageProps> = ({
   // Manejar volver al setup
   const handleBack = useCallback(() => {
     setIsRunning(false);
+    stopBackgroundMusic(false); // Detener música inmediatamente
     onBack();
-  }, [onBack]);
+  }, [onBack, stopBackgroundMusic]);
+
+  // Manejar detener música manualmente
+  const handleStopMusic = useCallback(() => {
+    stopBackgroundMusic(false); // Detener música inmediatamente
+  }, [stopBackgroundMusic]);
 
   const displayTime = formatTime(timeLeft);
   const progress = ((totalSeconds - timeLeft) / totalSeconds) * 100;
@@ -233,6 +239,17 @@ const CountdownPage: React.FC<CountdownPageProps> = ({
             onVolumeChange={updateMusicVolume}
             isPlaying={isRunning}
           />
+          
+          {/* Botón de emergencia para detener música */}
+          {isRunning && (
+            <button
+              onClick={handleStopMusic}
+              className="px-3 py-1 rounded-lg bg-red-600/80 hover:bg-red-700 text-white text-xs font-medium transition-all"
+              title="Detener música inmediatamente"
+            >
+              🔇 Parar música
+            </button>
+          )}
           
           <div className="text-sm text-white/40">
             {isRunning ? 'Ejecutando' : isPaused ? 'Pausado' : isFinished ? 'Terminado' : 'Listo'}

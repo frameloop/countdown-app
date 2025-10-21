@@ -10,6 +10,7 @@ interface AudioPoolState {
   audioLost: boolean;
   lastPlayTime: number;
   backgroundMusicPlaying: boolean;
+  fadeIntervalRef: NodeJS.Timeout | null;
 }
 
 export const useAudioPool = (volume: number = 50) => {
@@ -22,7 +23,8 @@ export const useAudioPool = (volume: number = 50) => {
     isInitialized: false,
     audioLost: false,
     lastPlayTime: 0,
-    backgroundMusicPlaying: false
+    backgroundMusicPlaying: false,
+    fadeIntervalRef: null
   });
 
   const [audioLost, setAudioLost] = useState(false);
@@ -141,7 +143,8 @@ export const useAudioPool = (volume: number = 50) => {
         isInitialized: true,
         audioLost: false,
         lastPlayTime: 0,
-        backgroundMusicPlaying: false
+        backgroundMusicPlaying: false,
+        fadeIntervalRef: null
       };
 
       console.log('Audio inicializado con volumen:', volume);
@@ -308,40 +311,77 @@ export const useAudioPool = (volume: number = 50) => {
 
   // Detener música de fondo con fade out
   const stopBackgroundMusic = useCallback((useFade: boolean = false) => {
-    if (audioState.current.backgroundMusic && audioState.current.backgroundMusicPlaying) {
-      if (useFade) {
-        // Fade out gradual
-        const music = audioState.current.backgroundMusic;
-        const startVolume = music.volume;
-        const fadeTime = 2000; // 2 segundos
-        const steps = 50;
-        const stepTime = fadeTime / steps;
-        const volumeStep = startVolume / steps;
-        let currentStep = 0;
+    console.log('stopBackgroundMusic llamado, useFade:', useFade);
+    console.log('backgroundMusic existe:', !!audioState.current.backgroundMusic);
+    console.log('backgroundMusicPlaying:', audioState.current.backgroundMusicPlaying);
+    
+    // Limpiar cualquier fade previo
+    if (audioState.current.fadeIntervalRef) {
+      clearInterval(audioState.current.fadeIntervalRef);
+      audioState.current.fadeIntervalRef = null;
+    }
+    
+    if (!audioState.current.backgroundMusic) {
+      console.log('No hay música de fondo para detener');
+      return;
+    }
 
-        const fadeInterval = setInterval(() => {
-          currentStep++;
-          const newVolume = Math.max(0, startVolume - (volumeStep * currentStep));
+    const music = audioState.current.backgroundMusic;
+
+    // En móvil, siempre detener inmediatamente como fallback
+    if (useFade && !isMobile()) {
+      // Fade out gradual solo en desktop
+      const startVolume = music.volume;
+      const fadeTime = 2000; // 2 segundos
+      const steps = 50;
+      const stepTime = fadeTime / steps;
+      const volumeStep = startVolume / steps;
+      let currentStep = 0;
+
+      console.log('Iniciando fade out desde volumen:', startVolume);
+
+      audioState.current.fadeIntervalRef = setInterval(() => {
+        currentStep++;
+        const newVolume = Math.max(0, startVolume - (volumeStep * currentStep));
+        
+        try {
           music.volume = newVolume;
+        } catch (error) {
+          console.error('Error ajustando volumen:', error);
+        }
 
-          if (currentStep >= steps || newVolume <= 0) {
-            clearInterval(fadeInterval);
+        if (currentStep >= steps || newVolume <= 0) {
+          if (audioState.current.fadeIntervalRef) {
+            clearInterval(audioState.current.fadeIntervalRef);
+            audioState.current.fadeIntervalRef = null;
+          }
+          
+          try {
             music.pause();
             music.currentTime = 0;
             music.volume = startVolume; // Restaurar volumen original
-            audioState.current.backgroundMusicPlaying = false;
-            console.log('Música de fondo detenida con fade out');
+          } catch (error) {
+            console.error('Error deteniendo música:', error);
           }
-        }, stepTime);
-      } else {
-        // Detener inmediatamente
-        audioState.current.backgroundMusic.pause();
-        audioState.current.backgroundMusic.currentTime = 0;
+          
+          audioState.current.backgroundMusicPlaying = false;
+          console.log('Música de fondo detenida con fade out');
+        }
+      }, stepTime);
+    } else {
+      // Detener inmediatamente (siempre en móvil)
+      console.log('Deteniendo música inmediatamente');
+      
+      try {
+        music.pause();
+        music.currentTime = 0;
         audioState.current.backgroundMusicPlaying = false;
-        console.log('Música de fondo detenida');
+        console.log('Música de fondo detenida exitosamente');
+      } catch (error) {
+        console.error('Error al detener música:', error);
       }
     }
-  }, []);
+  }, [isMobile]);
 
   // Actualizar volumen de la música de fondo
   const updateBackgroundMusicVolume = useCallback((newVolume: number) => {
@@ -378,6 +418,11 @@ export const useAudioPool = (volume: number = 50) => {
 
   // Limpiar recursos
   const cleanup = useCallback(() => {
+    // Limpiar fade interval si existe
+    if (audioState.current.fadeIntervalRef) {
+      clearInterval(audioState.current.fadeIntervalRef);
+    }
+    
     audioState.current.tickPool.forEach(audio => {
       audio.pause();
       audio.src = '';
@@ -401,7 +446,8 @@ export const useAudioPool = (volume: number = 50) => {
       isInitialized: false,
       audioLost: false,
       lastPlayTime: 0,
-      backgroundMusicPlaying: false
+      backgroundMusicPlaying: false,
+      fadeIntervalRef: null
     };
     setAudioLost(false);
   }, []);
