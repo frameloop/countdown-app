@@ -163,17 +163,17 @@ const CountdownPage: React.FC<CountdownPageProps> = ({
   // Efecto para cuando termina el temporizador
   useEffect(() => {
     if (isFinished) {
-      // Detener música de fondo
-      stopBackgroundMusic();
+      // Detener música de fondo con fade out
+      stopBackgroundMusic(true);
       
-      // Sonido de finalización
+      // Sonido de finalización (pitido largo)
       if (settings.soundsEnabled) {
         playFinishSound();
       }
 
-      // Vibración
+      // Vibración más larga
       if (settings.vibrationEnabled && 'vibrate' in navigator) {
-        navigator.vibrate([200, 100, 200]);
+        navigator.vibrate([500, 200, 500, 200, 500]);
       }
 
       // Notificación
