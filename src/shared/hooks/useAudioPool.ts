@@ -3,32 +3,22 @@ import { useCallback, useRef, useEffect, useState } from 'react';
 interface AudioPoolState {
   tickPool: HTMLAudioElement[];
   finishPool: HTMLAudioElement[];
-  backgroundMusic: HTMLAudioElement | null;
   currentTickIndex: number;
   currentFinishIndex: number;
   isInitialized: boolean;
   audioLost: boolean;
   lastPlayTime: number;
-  backgroundMusicPlaying: boolean;
-  fadeIntervalRef: NodeJS.Timeout | null;
-  shouldBePlaying: boolean; // Nueva flag para control estricto
-  watchdogInterval: NodeJS.Timeout | null; // Vigilante para forzar detención
 }
 
-export const useAudioPool = (volume: number = 50) => {
+export const useAudioPool = () => {
   const audioState = useRef<AudioPoolState>({
     tickPool: [],
     finishPool: [],
-    backgroundMusic: null,
     currentTickIndex: 0,
     currentFinishIndex: 0,
     isInitialized: false,
     audioLost: false,
-    lastPlayTime: 0,
-    backgroundMusicPlaying: false,
-    fadeIntervalRef: null,
-    shouldBePlaying: false,
-    watchdogInterval: null
+    lastPlayTime: 0
   });
 
   const [audioLost, setAudioLost] = useState(false);
@@ -81,56 +71,9 @@ export const useAudioPool = (volume: number = 50) => {
     return new Blob([buffer], { type: 'audio/wav' });
   }, []);
 
-  // Función para detener TODO el audio de forma nuclear
-  const killAllAudio = useCallback(() => {
-    console.log('☢️ KILL ALL AUDIO - Deteniendo todo');
-    
-    // Detener todos los ticks
-    audioState.current.tickPool.forEach(audio => {
-      try {
-        audio.pause();
-        audio.currentTime = 0;
-        audio.src = '';
-      } catch (e) {}
-    });
-    
-    // Detener todos los finish
-    audioState.current.finishPool.forEach(audio => {
-      try {
-        audio.pause();
-        audio.currentTime = 0;
-        audio.src = '';
-      } catch (e) {}
-    });
-    
-    // Detener música de fondo de forma ULTRA agresiva
-    if (audioState.current.backgroundMusic) {
-      try {
-        const music = audioState.current.backgroundMusic;
-        music.pause();
-        music.pause();
-        music.loop = false;
-        music.currentTime = 0;
-        music.volume = 0;
-        music.src = '';
-        music.load();
-      } catch (e) {}
-    }
-    
-    // Marcar flags
-    audioState.current.shouldBePlaying = false;
-    audioState.current.backgroundMusicPlaying = false;
-    
-    console.log('☢️ Todo el audio detenido');
-  }, []);
-
   // Inicializar pool de audio
   const initializeAudio = useCallback(async () => {
-    // IMPORTANTE: Limpiar cualquier instancia anterior primero
-    if (audioState.current.isInitialized) {
-      console.log('⚠️ Audio ya inicializado, limpiando antes de reinicializar...');
-      killAllAudio();
-    }
+    if (audioState.current.isInitialized) return true;
 
     try {
       // Crear múltiples instancias de cada sonido
@@ -168,62 +111,24 @@ export const useAudioPool = (volume: number = 50) => {
         finishPool.push(finishAudio);
       }
 
-      // Crear música de fondo usando archivo real
-      const backgroundMusic = new Audio('/background-music.mp3');
-      backgroundMusic.loop = true;
-      backgroundMusic.volume = volume / 100; // Usar volumen actual
-      backgroundMusic.preload = 'auto';
-      
-      // IMPORTANTE: Agregar ID único para poder identificarlo
-      backgroundMusic.id = 'countdown-background-music';
-      
-      // Agregar listeners para debugging
-      backgroundMusic.addEventListener('loadstart', () => console.log('🎵 Música: Iniciando carga'));
-      backgroundMusic.addEventListener('loadeddata', () => console.log('🎵 Música: Datos cargados'));
-      backgroundMusic.addEventListener('canplay', () => console.log('🎵 Música: Puede reproducir'));
-      backgroundMusic.addEventListener('canplaythrough', () => console.log('🎵 Música: Carga completa'));
-      backgroundMusic.addEventListener('error', (e) => console.error('❌ Música: Error de carga', e));
-      backgroundMusic.addEventListener('play', () => {
-        console.log('▶️ Música: Reproduciendo');
-        console.log('   - Volume:', backgroundMusic.volume);
-        console.log('   - Loop:', backgroundMusic.loop);
-        console.log('   - CurrentTime:', backgroundMusic.currentTime);
-      });
-      backgroundMusic.addEventListener('pause', () => {
-        console.log('⏸️ Música: Pausada');
-        console.log('   - CurrentTime:', backgroundMusic.currentTime);
-      });
-      backgroundMusic.addEventListener('ended', () => console.log('🏁 Música: Terminada'));
-      
-      // Exponer globalmente para debugging en consola
-      (window as any).countdownMusic = backgroundMusic;
-      console.log('🔍 Audio expuesto globalmente como window.countdownMusic');
-      
-      backgroundMusic.load();
-
       audioState.current = {
         tickPool,
         finishPool,
-        backgroundMusic,
         currentTickIndex: 0,
         currentFinishIndex: 0,
         isInitialized: true,
         audioLost: false,
-        lastPlayTime: 0,
-        backgroundMusicPlaying: false,
-        fadeIntervalRef: null,
-        shouldBePlaying: false,
-        watchdogInterval: null
+        lastPlayTime: 0
       };
 
-      console.log('Audio inicializado con volumen:', volume);
+      console.log('Audio inicializado (solo ticks y pitido)');
 
       return true;
     } catch (error) {
       console.warn('Error inicializando pool de audio:', error);
       return false;
     }
-  }, [createRobustAudioData, isMobile, volume]);
+  }, [createRobustAudioData, isMobile]);
 
   // Detectar pérdida de audio
   const detectAudioLoss = useCallback(() => {
@@ -338,173 +243,6 @@ export const useAudioPool = (volume: number = 50) => {
     }
   }, [initializeAudio]);
 
-  // Iniciar música de fondo
-  const startBackgroundMusic = useCallback(async () => {
-    if (!audioState.current.backgroundMusic) {
-      console.log('Música de fondo no disponible');
-      return;
-    }
-
-    if (audioState.current.backgroundMusicPlaying) {
-      console.log('Música de fondo ya reproduciéndose');
-      return;
-    }
-
-    try {
-      // Asegurar configuración correcta antes de reproducir
-      const currentVolume = volume / 100;
-      audioState.current.backgroundMusic.volume = currentVolume;
-      audioState.current.backgroundMusic.loop = true; // Asegurar que loop esté activado
-      
-      console.log('🎵 Intentando iniciar música de fondo...');
-      console.log('Estado del audio:', audioState.current.backgroundMusic.readyState);
-      console.log('Volumen configurado:', currentVolume, `(${volume}%)`);
-      console.log('Loop:', audioState.current.backgroundMusic.loop);
-      console.log('Paused:', audioState.current.backgroundMusic.paused);
-      
-      // Marcar que DEBE estar reproduciendo
-      audioState.current.shouldBePlaying = true;
-      
-      // Forzar play
-      const playPromise = audioState.current.backgroundMusic.play();
-      
-      if (playPromise !== undefined) {
-        await playPromise;
-        audioState.current.backgroundMusicPlaying = true;
-        console.log('✅ Música de fondo iniciada exitosamente');
-      }
-    } catch (error) {
-      console.error('❌ Error iniciando música de fondo:', error);
-      console.log('Detalles del error:', {
-        name: error.name,
-        message: error.message,
-        code: (error as any).code
-      });
-      audioState.current.shouldBePlaying = false;
-    }
-  }, [volume]);
-
-  // Detener música de fondo con fade out
-  const stopBackgroundMusic = useCallback((useFade: boolean = false) => {
-    console.log('🛑 stopBackgroundMusic llamado, useFade:', useFade);
-    console.log('backgroundMusic existe:', !!audioState.current.backgroundMusic);
-    console.log('backgroundMusicPlaying:', audioState.current.backgroundMusicPlaying);
-    
-    // PRIMERO: Marcar que NO debe estar reproduciendo
-    audioState.current.shouldBePlaying = false;
-    audioState.current.backgroundMusicPlaying = false;
-    
-    // Limpiar cualquier fade previo
-    if (audioState.current.fadeIntervalRef) {
-      clearInterval(audioState.current.fadeIntervalRef);
-      audioState.current.fadeIntervalRef = null;
-    }
-    
-    if (!audioState.current.backgroundMusic) {
-      console.log('No hay música de fondo para detener');
-      return;
-    }
-
-    const music = audioState.current.backgroundMusic;
-
-    // En móvil, siempre detener inmediatamente como fallback
-    if (useFade && !isMobile()) {
-      // Fade out gradual solo en desktop
-      const startVolume = music.volume;
-      const fadeTime = 2000; // 2 segundos
-      const steps = 50;
-      const stepTime = fadeTime / steps;
-      const volumeStep = startVolume / steps;
-      let currentStep = 0;
-
-      console.log('Iniciando fade out desde volumen:', startVolume);
-
-      audioState.current.fadeIntervalRef = setInterval(() => {
-        currentStep++;
-        const newVolume = Math.max(0, startVolume - (volumeStep * currentStep));
-        
-        try {
-          music.volume = newVolume;
-        } catch (error) {
-          console.error('Error ajustando volumen:', error);
-        }
-
-        if (currentStep >= steps || newVolume <= 0) {
-          if (audioState.current.fadeIntervalRef) {
-            clearInterval(audioState.current.fadeIntervalRef);
-            audioState.current.fadeIntervalRef = null;
-          }
-          
-          try {
-            music.pause();
-            music.currentTime = 0;
-            music.volume = startVolume; // Restaurar volumen original
-          } catch (error) {
-            console.error('Error deteniendo música:', error);
-          }
-          
-          audioState.current.backgroundMusicPlaying = false;
-          console.log('Música de fondo detenida con fade out');
-        }
-      }, stepTime);
-    } else {
-      // Detener inmediatamente (siempre en móvil)
-      console.log('🛑 Deteniendo música inmediatamente');
-      
-      // Usar killAllAudio para detener TODO
-      killAllAudio();
-      
-      // Verificación múltiple con varios delays
-      setTimeout(() => {
-        if (music && !music.paused) {
-          console.warn('⚠️ Música aún reproduciendo después de 100ms, reintentando');
-          killAllAudio();
-        }
-      }, 100);
-      
-      setTimeout(() => {
-        if (music && !music.paused) {
-          console.error('🚨 Música TODAVÍA reproduciendo después de 500ms');
-          console.log('Estado del elemento:', {
-            paused: music.paused,
-            currentTime: music.currentTime,
-            volume: music.volume,
-            loop: music.loop,
-            src: music.src
-          });
-          
-          // Último intento nuclear
-          try {
-            music.pause();
-            music.volume = 0;
-            music.src = '';
-            music.load();
-          } catch (e) {
-            console.error('Error en detención nuclear:', e);
-          }
-        } else {
-          console.log('✅ Música correctamente detenida');
-        }
-      }, 500);
-    }
-  }, [isMobile, killAllAudio]);
-
-  // Actualizar volumen de la música de fondo
-  const updateBackgroundMusicVolume = useCallback((newVolume: number) => {
-    if (audioState.current.backgroundMusic) {
-      const volumeValue = newVolume / 100;
-      audioState.current.backgroundMusic.volume = volumeValue;
-      console.log('🔊 Volumen de música actualizado a:', newVolume + '%', '(' + volumeValue + ')');
-      console.log('   Estado actual:', {
-        paused: audioState.current.backgroundMusic.paused,
-        volume: audioState.current.backgroundMusic.volume,
-        currentTime: audioState.current.backgroundMusic.currentTime
-      });
-    } else {
-      console.warn('⚠️ No hay música de fondo para ajustar volumen');
-    }
-  }, []);
-
   // Reactivar audio
   const reactivateAudio = useCallback(async () => {
     // Recargar todas las instancias
@@ -515,63 +253,13 @@ export const useAudioPool = (volume: number = 50) => {
       audio.load();
     });
 
-    // Asegurar que el volumen esté configurado correctamente
-    if (audioState.current.backgroundMusic) {
-      audioState.current.backgroundMusic.volume = volume / 100;
-    }
-
-    // Reiniciar música de fondo si estaba reproduciéndose
-    if (audioState.current.backgroundMusicPlaying) {
-      await startBackgroundMusic();
-    }
-
     audioState.current.audioLost = false;
     setAudioLost(false);
     console.log('Audio pool reactivado');
-  }, [startBackgroundMusic, volume]);
-
-  // Watchdog: Vigilante que verifica constantemente si la música debe estar detenida
-  useEffect(() => {
-    const watchdog = setInterval(() => {
-      // Si NO debe estar reproduciendo pero está reproduciendo, detener inmediatamente
-      if (!audioState.current.shouldBePlaying && 
-          audioState.current.backgroundMusic && 
-          !audioState.current.backgroundMusic.paused) {
-        
-        console.warn('🚨 WATCHDOG: Música reproduciendo cuando NO debería. Deteniendo...');
-        const music = audioState.current.backgroundMusic;
-        
-        try {
-          music.pause();
-          music.loop = false;
-          music.currentTime = 0;
-          audioState.current.backgroundMusicPlaying = false;
-          console.log('🛡️ WATCHDOG: Música detenida correctamente');
-        } catch (error) {
-          console.error('WATCHDOG: Error deteniendo música:', error);
-        }
-      }
-    }, 200); // Verificar cada 200ms
-    
-    audioState.current.watchdogInterval = watchdog;
-    
-    return () => {
-      if (watchdog) clearInterval(watchdog);
-    };
   }, []);
 
   // Limpiar recursos
   const cleanup = useCallback(() => {
-    // Limpiar watchdog
-    if (audioState.current.watchdogInterval) {
-      clearInterval(audioState.current.watchdogInterval);
-    }
-    
-    // Limpiar fade interval si existe
-    if (audioState.current.fadeIntervalRef) {
-      clearInterval(audioState.current.fadeIntervalRef);
-    }
-    
     audioState.current.tickPool.forEach(audio => {
       audio.pause();
       audio.src = '';
@@ -581,24 +269,14 @@ export const useAudioPool = (volume: number = 50) => {
       audio.src = '';
     });
     
-    if (audioState.current.backgroundMusic) {
-      audioState.current.backgroundMusic.pause();
-      audioState.current.backgroundMusic.src = '';
-    }
-    
     audioState.current = {
       tickPool: [],
       finishPool: [],
-      backgroundMusic: null,
       currentTickIndex: 0,
       currentFinishIndex: 0,
       isInitialized: false,
       audioLost: false,
-      lastPlayTime: 0,
-      backgroundMusicPlaying: false,
-      fadeIntervalRef: null,
-      shouldBePlaying: false,
-      watchdogInterval: null
+      lastPlayTime: 0
     };
     setAudioLost(false);
   }, []);
@@ -619,10 +297,6 @@ export const useAudioPool = (volume: number = 50) => {
     playFinishSound,
     initializeAudio,
     reactivateAudio,
-    startBackgroundMusic,
-    stopBackgroundMusic,
-    updateBackgroundMusicVolume,
-    killAllAudio, // Exponer para uso en emergencias
     audioLost,
     cleanup
   };

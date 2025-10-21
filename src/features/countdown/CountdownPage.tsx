@@ -14,8 +14,6 @@ import { motion, AnimatePresence } from 'framer-motion';
 import type { AppSettings } from '../../types';
 import { formatTime } from '../../shared/utils/time';
 import { useAudioPool } from '../../shared/hooks/useAudioPool';
-import VolumeSlider from '../../shared/components/VolumeSlider';
-import { useVolumeControl } from '../../shared/hooks/useVolumeControl';
 
 interface CountdownPageProps {
   totalSeconds: number;
@@ -36,20 +34,8 @@ const CountdownPage: React.FC<CountdownPageProps> = ({
   const [isFinished, setIsFinished] = useState(false);
   const [audioInitialized, setAudioInitialized] = useState(false);
 
-  // Hook para control de volumen
-  const { volume: musicVolume, setVolume: setMusicVolume } = useVolumeControl({
-    initialVolume: 50,
-    storageKey: 'music-volume'
-  });
-
   // Hook personalizado para manejo de audio con pool
-  const { playTickSound, playFinishSound, initializeAudio, reactivateAudio, startBackgroundMusic, stopBackgroundMusic, updateBackgroundMusicVolume, killAllAudio, audioLost } = useAudioPool(musicVolume);
-
-  // Función para actualizar volumen de la música en tiempo real
-  const updateMusicVolume = useCallback((newVolume: number) => {
-    setMusicVolume(newVolume);
-    updateBackgroundMusicVolume(newVolume);
-  }, [setMusicVolume, updateBackgroundMusicVolume]);
+  const { playTickSound, playFinishSound, initializeAudio, reactivateAudio, audioLost } = useAudioPool();
 
   // Inicializar audio cuando el usuario interactúe
   useEffect(() => {
@@ -129,19 +115,11 @@ const CountdownPage: React.FC<CountdownPageProps> = ({
     let interval: NodeJS.Timeout;
 
     if (isRunning && timeLeft > 0) {
-      // Iniciar música de fondo al comenzar countdown
-      if (settings.soundsEnabled) {
-        startBackgroundMusic();
-      }
-
       interval = setInterval(() => {
         setTimeLeft(prev => {
           if (prev <= 1) {
-            console.log('⏰ Timer llegó a 0 - MATANDO TODO EL AUDIO');
             setIsRunning(false);
             setIsFinished(true);
-            // KILL NUCLEAR - detener TODO
-            killAllAudio();
             return 0;
           }
           
@@ -153,29 +131,16 @@ const CountdownPage: React.FC<CountdownPageProps> = ({
           return prev - 1;
         });
       }, 1000);
-    } else {
-      // Detener música de fondo cuando se pausa o detiene
-      console.log('⏸️ Pausando/Deteniendo - MATANDO TODO EL AUDIO');
-      killAllAudio();
     }
 
     return () => {
       if (interval) clearInterval(interval);
-      // Asegurar que la música se detenga al limpiar el efecto
-      if (!isRunning) {
-        killAllAudio();
-      }
     };
-  }, [isRunning, timeLeft, playTickSound, settings.soundsEnabled, startBackgroundMusic, killAllAudio]);
+  }, [isRunning, timeLeft, playTickSound, settings.soundsEnabled]);
 
   // Efecto para cuando termina el temporizador
   useEffect(() => {
     if (isFinished) {
-      console.log('⏰ Cuenta atrás terminada - MATANDO TODO EL AUDIO');
-      
-      // KILL NUCLEAR - detener TODO
-      killAllAudio();
-      
       // Sonido de finalización (pitido largo)
       if (settings.soundsEnabled) {
         playFinishSound();
@@ -194,7 +159,7 @@ const CountdownPage: React.FC<CountdownPageProps> = ({
         });
       }
     }
-  }, [isFinished, settings, killAllAudio, playFinishSound]);
+  }, [isFinished, settings, playFinishSound]);
 
   // Manejar inicio/pausa
   const handleToggle = useCallback(() => {
@@ -220,15 +185,8 @@ const CountdownPage: React.FC<CountdownPageProps> = ({
   // Manejar volver al setup
   const handleBack = useCallback(() => {
     setIsRunning(false);
-    killAllAudio(); // KILL NUCLEAR
     onBack();
-  }, [onBack, killAllAudio]);
-
-  // Manejar detener música manualmente
-  const handleStopMusic = useCallback(() => {
-    console.log('🔴 Botón STOP manual presionado');
-    killAllAudio(); // KILL NUCLEAR
-  }, [killAllAudio]);
+  }, [onBack]);
 
   const displayTime = formatTime(timeLeft);
   const progress = ((totalSeconds - timeLeft) / totalSeconds) * 100;
@@ -244,46 +202,8 @@ const CountdownPage: React.FC<CountdownPageProps> = ({
           ← Volver al setup
         </button>
         
-        <div className="flex items-center gap-4">
-          <VolumeSlider
-            volume={musicVolume}
-            onVolumeChange={updateMusicVolume}
-            isPlaying={isRunning}
-          />
-          
-          {/* Botón de emergencia para detener música */}
-          <button
-            onClick={handleStopMusic}
-            className="px-3 py-1 rounded-lg bg-red-600/80 hover:bg-red-700 text-white text-xs font-medium transition-all"
-            title="Detener TODA la música inmediatamente (KILL SWITCH)"
-          >
-            ☢️ STOP
-          </button>
-          
-          <div className="text-sm text-white/40">
-            {isRunning ? 'Ejecutando' : isPaused ? 'Pausado' : isFinished ? 'Terminado' : 'Listo'}
-          </div>
-        </div>
-      </div>
-
-      {/* BOTÓN DE PRUEBA SÚPER VISIBLE */}
-      <div className="p-6 bg-yellow-500 border-b-4 border-yellow-600 shadow-2xl">
-        <div className="text-center mb-2">
-          <span className="text-yellow-900 font-bold text-sm">🔧 BOTÓN DE PRUEBA 🔧</span>
-        </div>
-        <button
-          onClick={startBackgroundMusic}
-          className="w-full py-6 px-8 bg-green-500 hover:bg-green-600 text-white font-black text-2xl rounded-2xl shadow-2xl border-8 border-green-300 animate-bounce"
-          style={{
-            background: 'linear-gradient(45deg, #10B981, #059669)',
-            boxShadow: '0 0 30px rgba(16, 185, 129, 0.8), inset 0 2px 4px rgba(255,255,255,0.3)',
-            textShadow: '2px 2px 4px rgba(0,0,0,0.5)'
-          }}
-        >
-          🎵 PROBAR MÚSICA DE FONDO 🎵
-        </button>
-        <div className="text-center mt-2">
-          <span className="text-yellow-800 font-bold text-xs">¡Haz clic aquí para probar!</span>
+        <div className="text-sm text-white/40">
+          {isRunning ? 'Ejecutando' : isPaused ? 'Pausado' : isFinished ? 'Terminado' : 'Listo'}
         </div>
       </div>
 
@@ -416,15 +336,8 @@ const CountdownPage: React.FC<CountdownPageProps> = ({
                   </button>
                 </>
               ) : (
-                <div className="flex flex-col items-center gap-1">
-                  <div className="px-4 py-2 rounded-lg bg-green-600/20 border border-green-500/30 text-green-400 text-sm">
-                    🔊 Audio activo
-                  </div>
-                  {isRunning && (
-                    <div className="px-3 py-1 rounded-lg bg-blue-600/20 border border-blue-500/30 text-blue-400 text-xs">
-                      🎵 Música de fondo
-                    </div>
-                  )}
+                <div className="px-4 py-2 rounded-lg bg-green-600/20 border border-green-500/30 text-green-400 text-sm">
+                  🔊 Audio activo
                 </div>
               )}
             </div>
