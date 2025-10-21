@@ -137,8 +137,11 @@ const CountdownPage: React.FC<CountdownPageProps> = ({
       interval = setInterval(() => {
         setTimeLeft(prev => {
           if (prev <= 1) {
+            console.log('⏰ Timer llegó a 0 - deteniendo');
             setIsRunning(false);
             setIsFinished(true);
+            // Detener música inmediatamente cuando llega a 0
+            stopBackgroundMusic(false);
             return 0;
           }
           
@@ -152,19 +155,26 @@ const CountdownPage: React.FC<CountdownPageProps> = ({
       }, 1000);
     } else {
       // Detener música de fondo cuando se pausa o detiene
-      stopBackgroundMusic();
+      console.log('⏸️ Pausando/Deteniendo - parando música');
+      stopBackgroundMusic(false);
     }
 
     return () => {
       if (interval) clearInterval(interval);
+      // Asegurar que la música se detenga al limpiar el efecto
+      if (!isRunning) {
+        stopBackgroundMusic(false);
+      }
     };
   }, [isRunning, timeLeft, playTickSound, settings.soundsEnabled, startBackgroundMusic, stopBackgroundMusic]);
 
   // Efecto para cuando termina el temporizador
   useEffect(() => {
     if (isFinished) {
-      // Detener música de fondo con fade out
-      stopBackgroundMusic(true);
+      console.log('⏰ Cuenta atrás terminada - deteniendo música');
+      
+      // Detener música de fondo INMEDIATAMENTE (sin fade en móviles)
+      stopBackgroundMusic(false);
       
       // Sonido de finalización (pitido largo)
       if (settings.soundsEnabled) {

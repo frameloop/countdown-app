@@ -282,14 +282,16 @@ export const useAudioPool = (volume: number = 50) => {
     }
 
     try {
-      // Asegurar que el volumen esté configurado correctamente
+      // Asegurar configuración correcta antes de reproducir
       const currentVolume = volume / 100;
       audioState.current.backgroundMusic.volume = currentVolume;
+      audioState.current.backgroundMusic.loop = true; // Asegurar que loop esté activado
       
-      console.log('Intentando iniciar música de fondo...');
+      console.log('🎵 Intentando iniciar música de fondo...');
       console.log('Estado del audio:', audioState.current.backgroundMusic.readyState);
       console.log('Volumen configurado:', currentVolume, `(${volume}%)`);
       console.log('Loop:', audioState.current.backgroundMusic.loop);
+      console.log('Paused:', audioState.current.backgroundMusic.paused);
       
       // Forzar play
       const playPromise = audioState.current.backgroundMusic.play();
@@ -297,10 +299,10 @@ export const useAudioPool = (volume: number = 50) => {
       if (playPromise !== undefined) {
         await playPromise;
         audioState.current.backgroundMusicPlaying = true;
-        console.log('Música de fondo iniciada exitosamente');
+        console.log('✅ Música de fondo iniciada exitosamente');
       }
     } catch (error) {
-      console.error('Error iniciando música de fondo:', error);
+      console.error('❌ Error iniciando música de fondo:', error);
       console.log('Detalles del error:', {
         name: error.name,
         message: error.message,
@@ -373,12 +375,32 @@ export const useAudioPool = (volume: number = 50) => {
       console.log('Deteniendo música inmediatamente');
       
       try {
-        music.pause();
-        music.currentTime = 0;
+        // Marcar como no reproduciendo ANTES de pausar
         audioState.current.backgroundMusicPlaying = false;
-        console.log('Música de fondo detenida exitosamente');
+        
+        // Intentar múltiples métodos para detener
+        music.pause();
+        
+        // Forzar detención adicional en móviles
+        if (isMobile()) {
+          music.loop = false;
+          music.pause();
+        }
+        
+        music.currentTime = 0;
+        
+        // Verificar después de un pequeño delay
+        setTimeout(() => {
+          if (music && !music.paused) {
+            console.warn('⚠️ Música aún reproduciendo, forzando stop');
+            music.pause();
+            music.currentTime = 0;
+          }
+          console.log('✅ Música de fondo detenida exitosamente. Estado paused:', music.paused);
+        }, 100);
+        
       } catch (error) {
-        console.error('Error al detener música:', error);
+        console.error('❌ Error al detener música:', error);
       }
     }
   }, [isMobile]);
