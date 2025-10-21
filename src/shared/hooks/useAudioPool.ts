@@ -81,9 +81,56 @@ export const useAudioPool = (volume: number = 50) => {
     return new Blob([buffer], { type: 'audio/wav' });
   }, []);
 
+  // Función para detener TODO el audio de forma nuclear
+  const killAllAudio = useCallback(() => {
+    console.log('☢️ KILL ALL AUDIO - Deteniendo todo');
+    
+    // Detener todos los ticks
+    audioState.current.tickPool.forEach(audio => {
+      try {
+        audio.pause();
+        audio.currentTime = 0;
+        audio.src = '';
+      } catch (e) {}
+    });
+    
+    // Detener todos los finish
+    audioState.current.finishPool.forEach(audio => {
+      try {
+        audio.pause();
+        audio.currentTime = 0;
+        audio.src = '';
+      } catch (e) {}
+    });
+    
+    // Detener música de fondo de forma ULTRA agresiva
+    if (audioState.current.backgroundMusic) {
+      try {
+        const music = audioState.current.backgroundMusic;
+        music.pause();
+        music.pause();
+        music.loop = false;
+        music.currentTime = 0;
+        music.volume = 0;
+        music.src = '';
+        music.load();
+      } catch (e) {}
+    }
+    
+    // Marcar flags
+    audioState.current.shouldBePlaying = false;
+    audioState.current.backgroundMusicPlaying = false;
+    
+    console.log('☢️ Todo el audio detenido');
+  }, []);
+
   // Inicializar pool de audio
   const initializeAudio = useCallback(async () => {
-    if (audioState.current.isInitialized) return true;
+    // IMPORTANTE: Limpiar cualquier instancia anterior primero
+    if (audioState.current.isInitialized) {
+      console.log('⚠️ Audio ya inicializado, limpiando antes de reinicializar...');
+      killAllAudio();
+    }
 
     try {
       // Crear múltiples instancias de cada sonido
@@ -127,14 +174,30 @@ export const useAudioPool = (volume: number = 50) => {
       backgroundMusic.volume = volume / 100; // Usar volumen actual
       backgroundMusic.preload = 'auto';
       
+      // IMPORTANTE: Agregar ID único para poder identificarlo
+      backgroundMusic.id = 'countdown-background-music';
+      
       // Agregar listeners para debugging
-      backgroundMusic.addEventListener('loadstart', () => console.log('Música: Iniciando carga'));
-      backgroundMusic.addEventListener('loadeddata', () => console.log('Música: Datos cargados'));
-      backgroundMusic.addEventListener('canplay', () => console.log('Música: Puede reproducir'));
-      backgroundMusic.addEventListener('canplaythrough', () => console.log('Música: Carga completa'));
-      backgroundMusic.addEventListener('error', (e) => console.error('Música: Error de carga', e));
-      backgroundMusic.addEventListener('play', () => console.log('Música: Reproduciendo'));
-      backgroundMusic.addEventListener('pause', () => console.log('Música: Pausada'));
+      backgroundMusic.addEventListener('loadstart', () => console.log('🎵 Música: Iniciando carga'));
+      backgroundMusic.addEventListener('loadeddata', () => console.log('🎵 Música: Datos cargados'));
+      backgroundMusic.addEventListener('canplay', () => console.log('🎵 Música: Puede reproducir'));
+      backgroundMusic.addEventListener('canplaythrough', () => console.log('🎵 Música: Carga completa'));
+      backgroundMusic.addEventListener('error', (e) => console.error('❌ Música: Error de carga', e));
+      backgroundMusic.addEventListener('play', () => {
+        console.log('▶️ Música: Reproduciendo');
+        console.log('   - Volume:', backgroundMusic.volume);
+        console.log('   - Loop:', backgroundMusic.loop);
+        console.log('   - CurrentTime:', backgroundMusic.currentTime);
+      });
+      backgroundMusic.addEventListener('pause', () => {
+        console.log('⏸️ Música: Pausada');
+        console.log('   - CurrentTime:', backgroundMusic.currentTime);
+      });
+      backgroundMusic.addEventListener('ended', () => console.log('🏁 Música: Terminada'));
+      
+      // Exponer globalmente para debugging en consola
+      (window as any).countdownMusic = backgroundMusic;
+      console.log('🔍 Audio expuesto globalmente como window.countdownMusic');
       
       backgroundMusic.load();
 
@@ -388,62 +451,57 @@ export const useAudioPool = (volume: number = 50) => {
       // Detener inmediatamente (siempre en móvil)
       console.log('🛑 Deteniendo música inmediatamente');
       
-      try {
-        // Detención ULTRA AGRESIVA para iOS
-        
-        // 1. Remover el atributo loop
-        music.removeAttribute('loop');
-        music.loop = false;
-        
-        // 2. Pausar varias veces
-        music.pause();
-        music.pause(); // Doble pausa
-        
-        // 3. Reset tiempo
-        music.currentTime = 0;
-        
-        // 4. En iOS, detener manualmente el src y recargarlo
-        if (isMobile()) {
-          const originalSrc = music.src;
-          music.src = '';
-          music.load();
-          setTimeout(() => {
-            music.src = originalSrc;
-            music.load();
-          }, 50);
+      // Usar killAllAudio para detener TODO
+      killAllAudio();
+      
+      // Verificación múltiple con varios delays
+      setTimeout(() => {
+        if (music && !music.paused) {
+          console.warn('⚠️ Música aún reproduciendo después de 100ms, reintentando');
+          killAllAudio();
         }
-        
-        // 5. Verificación múltiple con varios delays
-        setTimeout(() => {
-          if (music && !music.paused) {
-            console.warn('⚠️ Música aún reproduciendo después de 100ms, forzando stop');
+      }, 100);
+      
+      setTimeout(() => {
+        if (music && !music.paused) {
+          console.error('🚨 Música TODAVÍA reproduciendo después de 500ms');
+          console.log('Estado del elemento:', {
+            paused: music.paused,
+            currentTime: music.currentTime,
+            volume: music.volume,
+            loop: music.loop,
+            src: music.src
+          });
+          
+          // Último intento nuclear
+          try {
             music.pause();
-            music.loop = false;
-            music.currentTime = 0;
-          }
-        }, 100);
-        
-        setTimeout(() => {
-          if (music && !music.paused) {
-            console.error('🚨 Música TODAVÍA reproduciendo después de 500ms, stop NUCLEAR');
-            music.pause();
+            music.volume = 0;
             music.src = '';
             music.load();
+          } catch (e) {
+            console.error('Error en detención nuclear:', e);
           }
-          console.log('✅ Estado final - Paused:', music.paused, 'CurrentTime:', music.currentTime);
-        }, 500);
-        
-      } catch (error) {
-        console.error('❌ Error al detener música:', error);
-      }
+        } else {
+          console.log('✅ Música correctamente detenida');
+        }
+      }, 500);
     }
-  }, [isMobile]);
+  }, [isMobile, killAllAudio]);
 
   // Actualizar volumen de la música de fondo
   const updateBackgroundMusicVolume = useCallback((newVolume: number) => {
     if (audioState.current.backgroundMusic) {
-      audioState.current.backgroundMusic.volume = newVolume / 100;
-      console.log('Volumen de música de fondo actualizado:', newVolume);
+      const volumeValue = newVolume / 100;
+      audioState.current.backgroundMusic.volume = volumeValue;
+      console.log('🔊 Volumen de música actualizado a:', newVolume + '%', '(' + volumeValue + ')');
+      console.log('   Estado actual:', {
+        paused: audioState.current.backgroundMusic.paused,
+        volume: audioState.current.backgroundMusic.volume,
+        currentTime: audioState.current.backgroundMusic.currentTime
+      });
+    } else {
+      console.warn('⚠️ No hay música de fondo para ajustar volumen');
     }
   }, []);
 
@@ -564,6 +622,7 @@ export const useAudioPool = (volume: number = 50) => {
     startBackgroundMusic,
     stopBackgroundMusic,
     updateBackgroundMusicVolume,
+    killAllAudio, // Exponer para uso en emergencias
     audioLost,
     cleanup
   };

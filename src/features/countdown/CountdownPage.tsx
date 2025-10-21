@@ -43,7 +43,7 @@ const CountdownPage: React.FC<CountdownPageProps> = ({
   });
 
   // Hook personalizado para manejo de audio con pool
-  const { playTickSound, playFinishSound, initializeAudio, reactivateAudio, startBackgroundMusic, stopBackgroundMusic, updateBackgroundMusicVolume, audioLost } = useAudioPool(musicVolume);
+  const { playTickSound, playFinishSound, initializeAudio, reactivateAudio, startBackgroundMusic, stopBackgroundMusic, updateBackgroundMusicVolume, killAllAudio, audioLost } = useAudioPool(musicVolume);
 
   // Función para actualizar volumen de la música en tiempo real
   const updateMusicVolume = useCallback((newVolume: number) => {
@@ -137,11 +137,11 @@ const CountdownPage: React.FC<CountdownPageProps> = ({
       interval = setInterval(() => {
         setTimeLeft(prev => {
           if (prev <= 1) {
-            console.log('⏰ Timer llegó a 0 - deteniendo');
+            console.log('⏰ Timer llegó a 0 - MATANDO TODO EL AUDIO');
             setIsRunning(false);
             setIsFinished(true);
-            // Detener música inmediatamente cuando llega a 0
-            stopBackgroundMusic(false);
+            // KILL NUCLEAR - detener TODO
+            killAllAudio();
             return 0;
           }
           
@@ -155,26 +155,26 @@ const CountdownPage: React.FC<CountdownPageProps> = ({
       }, 1000);
     } else {
       // Detener música de fondo cuando se pausa o detiene
-      console.log('⏸️ Pausando/Deteniendo - parando música');
-      stopBackgroundMusic(false);
+      console.log('⏸️ Pausando/Deteniendo - MATANDO TODO EL AUDIO');
+      killAllAudio();
     }
 
     return () => {
       if (interval) clearInterval(interval);
       // Asegurar que la música se detenga al limpiar el efecto
       if (!isRunning) {
-        stopBackgroundMusic(false);
+        killAllAudio();
       }
     };
-  }, [isRunning, timeLeft, playTickSound, settings.soundsEnabled, startBackgroundMusic, stopBackgroundMusic]);
+  }, [isRunning, timeLeft, playTickSound, settings.soundsEnabled, startBackgroundMusic, killAllAudio]);
 
   // Efecto para cuando termina el temporizador
   useEffect(() => {
     if (isFinished) {
-      console.log('⏰ Cuenta atrás terminada - deteniendo música');
+      console.log('⏰ Cuenta atrás terminada - MATANDO TODO EL AUDIO');
       
-      // Detener música de fondo INMEDIATAMENTE (sin fade en móviles)
-      stopBackgroundMusic(false);
+      // KILL NUCLEAR - detener TODO
+      killAllAudio();
       
       // Sonido de finalización (pitido largo)
       if (settings.soundsEnabled) {
@@ -194,7 +194,7 @@ const CountdownPage: React.FC<CountdownPageProps> = ({
         });
       }
     }
-  }, [isFinished, settings, stopBackgroundMusic, playFinishSound]);
+  }, [isFinished, settings, killAllAudio, playFinishSound]);
 
   // Manejar inicio/pausa
   const handleToggle = useCallback(() => {
@@ -220,14 +220,15 @@ const CountdownPage: React.FC<CountdownPageProps> = ({
   // Manejar volver al setup
   const handleBack = useCallback(() => {
     setIsRunning(false);
-    stopBackgroundMusic(false); // Detener música inmediatamente
+    killAllAudio(); // KILL NUCLEAR
     onBack();
-  }, [onBack, stopBackgroundMusic]);
+  }, [onBack, killAllAudio]);
 
   // Manejar detener música manualmente
   const handleStopMusic = useCallback(() => {
-    stopBackgroundMusic(false); // Detener música inmediatamente
-  }, [stopBackgroundMusic]);
+    console.log('🔴 Botón STOP manual presionado');
+    killAllAudio(); // KILL NUCLEAR
+  }, [killAllAudio]);
 
   const displayTime = formatTime(timeLeft);
   const progress = ((totalSeconds - timeLeft) / totalSeconds) * 100;
@@ -251,15 +252,13 @@ const CountdownPage: React.FC<CountdownPageProps> = ({
           />
           
           {/* Botón de emergencia para detener música */}
-          {isRunning && (
-            <button
-              onClick={handleStopMusic}
-              className="px-3 py-1 rounded-lg bg-red-600/80 hover:bg-red-700 text-white text-xs font-medium transition-all"
-              title="Detener música inmediatamente"
-            >
-              🔇 Parar música
-            </button>
-          )}
+          <button
+            onClick={handleStopMusic}
+            className="px-3 py-1 rounded-lg bg-red-600/80 hover:bg-red-700 text-white text-xs font-medium transition-all"
+            title="Detener TODA la música inmediatamente (KILL SWITCH)"
+          >
+            ☢️ STOP
+          </button>
           
           <div className="text-sm text-white/40">
             {isRunning ? 'Ejecutando' : isPaused ? 'Pausado' : isFinished ? 'Terminado' : 'Listo'}
