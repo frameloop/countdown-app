@@ -1,7 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Settings, Volume2, VolumeX, Play, Pause, RotateCcw, ArrowLeft, Bell, Vibrate } from 'lucide-react';
-import VolumeSlider from './shared/components/VolumeSlider';
-import { useVolumeControl } from './shared/hooks/useVolumeControl';
+import { Settings, Play, Pause, RotateCcw, ArrowLeft, Bell, Vibrate } from 'lucide-react';
 
 // Componente principal de la aplicación
 const App = () => {
@@ -22,14 +20,6 @@ const App = () => {
     theme: 'dark'
   });
 
-  // Estado para la música de fondo
-  const [backgroundMusic, setBackgroundMusic] = useState<HTMLAudioElement | null>(null);
-  
-  // Hook para control de volumen
-  const { volume: musicVolume, setVolume: setMusicVolume } = useVolumeControl({
-    initialVolume: 50,
-    storageKey: 'music-volume'
-  });
 
   // Temas disponibles
   const themes = {
@@ -61,51 +51,6 @@ const App = () => {
 
   const currentTheme = themes[settings.theme as keyof typeof themes];
 
-  // Función para iniciar música de fondo
-  const startBackgroundMusic = async () => {
-    if (backgroundMusic) {
-      backgroundMusic.pause();
-      backgroundMusic.currentTime = 0;
-    }
-    
-    try {
-      const audio = new Audio('/background-music.mp3');
-      audio.volume = musicVolume / 100; // Usar volumen del hook
-      audio.loop = true;
-      await audio.play();
-      setBackgroundMusic(audio);
-      console.log('🎵 Música de fondo iniciada');
-    } catch (error) {
-      console.error('🎵 Error iniciando música:', error);
-    }
-  };
-
-  // Función para detener música de fondo con fade out
-  const stopBackgroundMusic = () => {
-    if (backgroundMusic) {
-      // Fade out suave durante 2 segundos
-      const fadeOut = () => {
-        const currentVolume = backgroundMusic.volume;
-        if (currentVolume > 0.01) {
-          backgroundMusic.volume = Math.max(0, currentVolume - 0.05);
-          setTimeout(fadeOut, 100);
-        } else {
-          backgroundMusic.pause();
-          backgroundMusic.currentTime = 0;
-          backgroundMusic.volume = musicVolume / 100; // Restaurar volumen actual
-        }
-      };
-      fadeOut();
-    }
-  };
-
-  // Función para actualizar volumen de la música en tiempo real
-  const updateMusicVolume = (newVolume: number) => {
-    setMusicVolume(newVolume);
-    if (backgroundMusic) {
-      backgroundMusic.volume = newVolume / 100;
-    }
-  };
   const [history, setHistory] = useState<Array<{
     id: string;
     duration: number;
@@ -223,7 +168,6 @@ const App = () => {
              <div className="flex justify-between items-center mb-8">
                <button
                  onClick={() => {
-                   stopBackgroundMusic(); // Fade out al volver
                    setCurrentPage('landing');
                  }}
                  className="flex items-center gap-2 text-white/60 hover:text-white transition-colors"
@@ -233,12 +177,6 @@ const App = () => {
                </button>
                
                <div className="flex items-center gap-4">
-                 <VolumeSlider
-                   volume={musicVolume}
-                   onVolumeChange={updateMusicVolume}
-                   isPlaying={backgroundMusic !== null}
-                 />
-                 
                  <button
                    onClick={() => setCurrentPage('settings')}
                    className="flex items-center gap-2 text-white/60 hover:text-white transition-colors"
@@ -317,7 +255,7 @@ const App = () => {
           {/* Toggle de sonidos */}
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <Volume2 size={24} className="text-white/80" />
+              <span className="text-2xl">🔊</span>
               <div>
                 <div className="font-medium">Sonidos</div>
                 <div className="text-sm text-white/60">Pitido al finalizar</div>
@@ -598,21 +536,14 @@ const App = () => {
   // };
 
   // Función para iniciar/pausar
-  const toggleTimer = async () => {
-    if (isRunning) {
-      setIsRunning(false);
-      stopBackgroundMusic(); // Fade out al pausar
-    } else {
-      setIsRunning(true);
-      await startBackgroundMusic();
-    }
+  const toggleTimer = () => {
+    setIsRunning(!isRunning);
   };
 
   // Función para resetear
   const resetTimer = () => {
     setIsRunning(false);
     setTimeLeft(minutes * 60 + seconds);
-    stopBackgroundMusic(); // Fade out al resetear
   };
 
   // Efecto para el countdown
@@ -628,7 +559,6 @@ const App = () => {
             playFinishSound(); // Sonido largo de finalización
             vibrate();
             showNotification();
-            stopBackgroundMusic(); // Fade out de la música de fondo
             
             // Agregar al historial
             const newEntry = {
