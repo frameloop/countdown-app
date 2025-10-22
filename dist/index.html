@@ -16,9 +16,47 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
     
+    <!-- Estilos para prevenir scroll -->
+    <style>
+      html, body {
+        height: 100%;
+        overflow: hidden;
+        position: fixed;
+        width: 100%;
+        margin: 0;
+        padding: 0;
+        touch-action: none;
+        -webkit-overflow-scrolling: touch;
+      }
+      
+      #root {
+        height: 100vh;
+        width: 100vw;
+        overflow: hidden;
+        position: fixed;
+        top: 0;
+        left: 0;
+      }
+      
+      /* Prevenir zoom en móviles */
+      * {
+        -webkit-touch-callout: none;
+        -webkit-user-select: none;
+        -moz-user-select: none;
+        user-select: none;
+      }
+      
+      /* Permitir selección solo en inputs */
+      input, textarea {
+        -webkit-user-select: text;
+        -moz-user-select: text;
+        user-select: text;
+      }
+    </style>
+    
     <title>Configurador de Temporizador</title>
-    <script type="module" crossorigin src="/assets/index-MktSNcCj.js"></script>
-    <link rel="stylesheet" crossorigin href="/assets/index-CcaXHY_c.css">
+    <script type="module" crossorigin src="/assets/index-DMtJywZZ.js"></script>
+    <link rel="stylesheet" crossorigin href="/assets/index-D40-3O_e.css">
   </head>
   <body>
     <div id="root"></div>

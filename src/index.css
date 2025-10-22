@@ -2,6 +2,52 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Estilos globales para prevenir scroll */
+html, body {
+  height: 100%;
+  overflow: hidden;
+  position: fixed;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  touch-action: none;
+  -webkit-overflow-scrolling: touch;
+}
+
+#root {
+  height: 100vh;
+  width: 100vw;
+  overflow: hidden;
+  position: fixed;
+  top: 0;
+  left: 0;
+}
+
+/* Prevenir zoom en móviles */
+* {
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  -khtml-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+}
+
+/* Permitir selección solo en inputs */
+input, textarea {
+  -webkit-user-select: text;
+  -moz-user-select: text;
+  -ms-user-select: text;
+  user-select: text;
+}
+
+/* Prevenir scroll en contenedores */
+.no-scroll {
+  overflow: hidden !important;
+  height: 100vh !important;
+  width: 100vw !important;
+}
+
 /* Estilos para el slider de volumen */
 input[type="range"] {
   -webkit-appearance: none;

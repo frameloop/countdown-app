@@ -60,7 +60,7 @@ const App = () => {
 
   // Landing Page - Configuración inicial del tiempo
   const LandingPage = () => (
-    <div className={`min-h-screen ${currentTheme.bg} ${currentTheme.text} p-4 flex flex-col items-center justify-center`}>
+    <div className={`h-screen w-screen overflow-hidden ${currentTheme.bg} ${currentTheme.text} p-4 flex flex-col items-center justify-center`}>
       <div className="max-w-md mx-auto">
                {/* Título */}
         <h1 className="text-3xl font-bold text-center mb-8">
@@ -163,7 +163,7 @@ const App = () => {
 
          // Home Page - Solo el contador
          const HomePage = () => (
-           <div className={`min-h-screen ${currentTheme.bg} ${currentTheme.text} p-4 flex flex-col`}>
+           <div className={`h-screen w-screen overflow-hidden ${currentTheme.bg} ${currentTheme.text} p-4 flex flex-col`}>
              {/* Header con botón de configuración */}
              <div className="flex justify-between items-center mb-8">
                <button
@@ -236,7 +236,7 @@ const App = () => {
 
   // Settings Page - Configuraciones avanzadas
   const SettingsPage = () => (
-    <div className={`min-h-screen ${currentTheme.bg} ${currentTheme.text} p-4`}>
+    <div className={`h-screen w-screen overflow-hidden ${currentTheme.bg} ${currentTheme.text} p-4`}>
       <div className="max-w-md mx-auto">
         {/* Header */}
         <div className="flex justify-between items-center mb-8">
